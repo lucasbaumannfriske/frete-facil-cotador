@@ -12,10 +12,17 @@ import { Card, CardContent } from "@/components/ui/card";
 import { PackageIcon, TruckIcon } from "lucide-react";
 
 const Index = () => {
-  // Estado para informações do cliente
+  // Estado para informações do cliente/tomador
   const [cliente, setCliente] = useState("");
-  const [endereco, setEndereco] = useState("");
   const [cidade, setCidade] = useState("");
+  
+  // Estado para detalhes do frete
+  const [origem, setOrigem] = useState("");
+  const [destino, setDestino] = useState("");
+  const [roteiro, setRoteiro] = useState("");
+  
+  // Campos originais mantidos para compatibilidade
+  const [endereco, setEndereco] = useState("");
   const [estado, setEstado] = useState("");
   const [cep, setCep] = useState("");
   const [fazenda, setFazenda] = useState("");
@@ -99,8 +106,11 @@ const Index = () => {
   // Limpar formulário para nova cotação
   const limparFormulario = () => {
     setCliente("");
-    setEndereco("");
     setCidade("");
+    setOrigem("");
+    setDestino("");
+    setRoteiro("");
+    setEndereco("");
     setEstado("");
     setCep("");
     setFazenda("");
@@ -137,10 +147,16 @@ const Index = () => {
           <ClienteForm
             cliente={cliente}
             setCliente={setCliente}
-            endereco={endereco}
-            setEndereco={setEndereco}
             cidade={cidade}
             setCidade={setCidade}
+            origem={origem}
+            setOrigem={setOrigem}
+            destino={destino}
+            setDestino={setDestino}
+            roteiro={roteiro}
+            setRoteiro={setRoteiro}
+            endereco={endereco}
+            setEndereco={setEndereco}
             estado={estado}
             setEstado={setEstado}
             cep={cep}
