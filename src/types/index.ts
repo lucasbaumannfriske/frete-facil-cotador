@@ -24,6 +24,9 @@ export interface CotacaoSalva {
   cidade: string;
   estado: string;
   cep: string;
+  origem?: string;
+  destino?: string;
+  roteiro?: string;
   produtos: Produto[];
   transportadoras: Transportadora[];
   observacoes: string;

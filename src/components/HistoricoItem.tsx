@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -16,9 +17,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CotacaoSalva, Transportadora } from "@/types";
+import { CotacaoSalva, Transportadora, Produto } from "@/types";
 import { StatusBadge } from "./StatusBadge";
-import { CalendarIcon, MapPinIcon, TruckIcon, PackageIcon } from "lucide-react";
+import { CalendarIcon, MapPinIcon, TruckIcon, PackageIcon, Edit, Trash2 } from "lucide-react";
 
 interface HistoricoItemProps {
   item: CotacaoSalva;
@@ -29,6 +30,10 @@ interface HistoricoItemProps {
   cancelarEdicao: () => void;
   atualizarTransportadora: (transportadoraIndex: number, campo: keyof Transportadora, valor: string) => void;
   atualizarStatus: (transportadoraIndex: number, status: string) => void;
+  atualizarCampo?: (campo: keyof CotacaoSalva, valor: string) => void;
+  atualizarProduto?: (produtoIndex: number, campo: keyof Produto, valor: string | number) => void;
+  adicionarProduto?: () => void;
+  removerProduto?: (produtoIndex: number) => void;
 }
 
 const HistoricoItem = ({
@@ -40,6 +45,10 @@ const HistoricoItem = ({
   cancelarEdicao,
   atualizarTransportadora,
   atualizarStatus,
+  atualizarCampo,
+  atualizarProduto,
+  adicionarProduto,
+  removerProduto,
 }: HistoricoItemProps) => {
   return (
     <Card className="mb-4 overflow-hidden border-l-4 border-l-primary">
@@ -48,7 +57,16 @@ const HistoricoItem = ({
           <div className="flex justify-between items-center mb-2">
             <h3 className="text-lg font-semibold flex items-center gap-2">
               <TruckIcon className="h-5 w-5 text-primary" />
-              {item.cliente}
+              {modoEdicao ? (
+                <Input
+                  value={item.cliente}
+                  onChange={(e) => atualizarCampo && atualizarCampo('cliente', e.target.value)}
+                  placeholder="Nome do cliente"
+                  className="inline-block"
+                />
+              ) : (
+                item.cliente
+              )}
             </h3>
             <div className="flex items-center gap-2">
               <CalendarIcon className="h-4 w-4 text-muted-foreground" />
@@ -59,42 +77,123 @@ const HistoricoItem = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground mb-2">
-            <div className="flex items-center gap-1">
-              <MapPinIcon className="h-4 w-4" />
-              <span>{item.cidade} - {item.estado}</span>
-            </div>
-            {item.fazenda && (
-              <div className="flex items-center gap-1 ml-4">
-                <PackageIcon className="h-4 w-4" />
-                <span>{item.fazenda}</span>
+            {modoEdicao ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 w-full">
+                <div className="flex flex-col gap-1">
+                  <label htmlFor="cidade" className="text-xs">Cidade:</label>
+                  <Input
+                    id="cidade"
+                    value={item.cidade}
+                    onChange={(e) => atualizarCampo && atualizarCampo('cidade', e.target.value)}
+                    placeholder="Cidade"
+                    className="h-8"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label htmlFor="estado" className="text-xs">Estado:</label>
+                  <Input
+                    id="estado"
+                    value={item.estado}
+                    onChange={(e) => atualizarCampo && atualizarCampo('estado', e.target.value)}
+                    placeholder="Estado"
+                    className="h-8"
+                  />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label htmlFor="fazenda" className="text-xs">Fazenda:</label>
+                  <Input
+                    id="fazenda"
+                    value={item.fazenda}
+                    onChange={(e) => atualizarCampo && atualizarCampo('fazenda', e.target.value)}
+                    placeholder="Fazenda"
+                    className="h-8"
+                  />
+                </div>
               </div>
+            ) : (
+              <>
+                <div className="flex items-center gap-1">
+                  <MapPinIcon className="h-4 w-4" />
+                  <span>{item.cidade} - {item.estado}</span>
+                </div>
+                {item.fazenda && (
+                  <div className="flex items-center gap-1 ml-4">
+                    <PackageIcon className="h-4 w-4" />
+                    <span>{item.fazenda}</span>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
         
         <div className="p-4">
-          <Accordion type="single" collapsible className="mb-4">
+          <Accordion type="single" collapsible className="mb-4" defaultValue={modoEdicao ? "produtos" : undefined}>
             <AccordionItem value="produtos" className="border-none">
               <AccordionTrigger className="py-2 px-2 hover:bg-muted/30 rounded-md">
                 Produtos
               </AccordionTrigger>
               <AccordionContent>
                 <div className="mt-2 bg-muted/20 rounded-md p-3">
-                  <ul className="space-y-1 text-sm">
-                    {item.produtos.map((produto, idx) => (
-                      <li key={idx} className="flex items-center gap-2 p-1">
-                        <span className="font-medium">{produto.nome}</span>
-                        <span className="text-xs bg-secondary px-2 py-0.5 rounded-full">
-                          Qtd: {produto.quantidade}
-                        </span>
-                        {produto.peso && (
+                  {modoEdicao ? (
+                    <div className="space-y-3">
+                      {item.produtos.map((produto, idx) => (
+                        <div key={idx} className="flex items-center gap-2 p-1 bg-background rounded-md border p-2">
+                          <Input
+                            value={produto.nome}
+                            onChange={(e) => atualizarProduto && atualizarProduto(idx, 'nome', e.target.value)}
+                            placeholder="Nome do produto"
+                            className="flex-grow"
+                          />
+                          <Input
+                            type="number"
+                            value={produto.quantidade}
+                            onChange={(e) => atualizarProduto && atualizarProduto(idx, 'quantidade', Number(e.target.value))}
+                            placeholder="Qtd"
+                            className="w-20"
+                            min="1"
+                          />
+                          <Input
+                            value={produto.peso}
+                            onChange={(e) => atualizarProduto && atualizarProduto(idx, 'peso', e.target.value)}
+                            placeholder="Peso"
+                            className="w-24"
+                          />
+                          <Button 
+                            variant="destructive" 
+                            size="icon" 
+                            onClick={() => removerProduto && removerProduto(idx)}
+                            disabled={item.produtos.length <= 1}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                      <Button 
+                        onClick={() => adicionarProduto && adicionarProduto()}
+                        size="sm" 
+                        className="mt-2"
+                      >
+                        Adicionar Produto
+                      </Button>
+                    </div>
+                  ) : (
+                    <ul className="space-y-1 text-sm">
+                      {item.produtos.map((produto, idx) => (
+                        <li key={idx} className="flex items-center gap-2 p-1">
+                          <span className="font-medium">{produto.nome}</span>
                           <span className="text-xs bg-secondary px-2 py-0.5 rounded-full">
-                            {produto.peso} kg
+                            Qtd: {produto.quantidade}
                           </span>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
+                          {produto.peso && (
+                            <span className="text-xs bg-secondary px-2 py-0.5 rounded-full">
+                              {produto.peso} kg
+                            </span>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               </AccordionContent>
             </AccordionItem>
@@ -113,7 +212,16 @@ const HistoricoItem = ({
                   id={`transp-${item.id}-${transp.nome.replace(/\s+/g, "")}`}
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-3">
-                    <span className="font-medium text-primary">{transp.nome}</span>
+                    {modoEdicao ? (
+                      <Input
+                        value={transp.nome}
+                        onChange={(e) => atualizarTransportadora(idx, "nome", e.target.value)}
+                        placeholder="Nome da transportadora"
+                        className="sm:max-w-[200px]"
+                      />
+                    ) : (
+                      <span className="font-medium text-primary">{transp.nome}</span>
+                    )}
                     {!modoEdicao && (
                       <StatusBadge status={transp.status} className="sm:ml-auto" />
                     )}
@@ -212,12 +320,22 @@ const HistoricoItem = ({
             </div>
           </div>
 
-          {item.observacoes && (
+          {modoEdicao ? (
+            <div className="mb-4">
+              <h4 className="text-sm font-medium mb-1">Observações:</h4>
+              <Textarea
+                value={item.observacoes}
+                onChange={(e) => atualizarCampo && atualizarCampo('observacoes', e.target.value)}
+                placeholder="Observações"
+                className="min-h-[100px]"
+              />
+            </div>
+          ) : item.observacoes ? (
             <div className="mb-4 bg-muted/20 p-3 rounded-md">
               <h4 className="text-sm font-medium mb-1">Observações:</h4>
               <p className="text-sm">{item.observacoes}</p>
             </div>
-          )}
+          ) : null}
 
           <div className="flex flex-wrap gap-2 mt-4">
             {modoEdicao ? (
@@ -238,9 +356,7 @@ const HistoricoItem = ({
             ) : (
               <>
                 <Button variant="outline" onClick={() => editarCotacao(item.id)} size="sm" className="gap-1">
-                  <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M11.8536 1.14645C11.6583 0.951184 11.3417 0.951184 11.1465 1.14645L3.71455 8.57836C3.62459 8.66832 3.55263 8.77461 3.50251 8.89155L2.04044 12.303C1.9599 12.491 2.00189 12.709 2.14646 12.8536C2.29103 12.9981 2.50905 13.0401 2.69697 12.9596L6.10847 11.4975C6.2254 11.4474 6.3317 11.3754 6.42166 11.2855L13.8536 3.85355C14.0488 3.65829 14.0488 3.34171 13.8536 3.14645L11.8536 1.14645ZM4.42166 9.28547L11.5 2.20711L12.7929 3.5L5.71455 10.5784L4.21924 11.2192L3.78081 10.7808L4.42166 9.28547Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path>
-                  </svg>
+                  <Edit className="h-4 w-4" />
                   Editar
                 </Button>
                 <Button
@@ -249,9 +365,7 @@ const HistoricoItem = ({
                   size="sm"
                   className="gap-1"
                 >
-                  <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M5.5 1C5.22386 1 5 1.22386 5 1.5C5 1.77614 5.22386 2 5.5 2H9.5C9.77614 2 10 1.77614 10 1.5C10 1.22386 9.77614 1 9.5 1H5.5ZM3 3.5C3 3.22386 3.22386 3 3.5 3H11.5C11.7761 3 12 3.22386 12 3.5C12 3.77614 11.7761 4 11.5 4H3.5C3.22386 4 3 3.77614 3 3.5ZM3.5 5C3.22386 5 3 5.22386 3 5.5C3 5.77614 3.22386 6 3.5 6H4V12C4 12.5523 4.44772 13 5 13H10C10.5523 13 11 12.5523 11 12V6H11.5C11.7761 6 12 5.77614 12 5.5C12 5.22386 11.7761 5 11.5 5H3.5ZM5 6H10V12H5V6Z" fill="currentColor" fillRule="evenodd" clipRule="evenodd"></path>
-                  </svg>
+                  <Trash2 className="h-4 w-4" />
                   Apagar
                 </Button>
               </>

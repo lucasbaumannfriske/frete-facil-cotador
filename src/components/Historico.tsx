@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { CotacaoSalva, Transportadora } from "@/types";
+import { CotacaoSalva, Transportadora, Produto } from "@/types";
 import HistoricoItem from "./HistoricoItem";
 import { toast } from "sonner";
 import { TruckIcon } from "lucide-react";
@@ -68,6 +68,57 @@ const Historico = ({ historico, setHistorico }: HistoricoProps) => {
     });
   };
 
+  const atualizarCampo = (campo: keyof CotacaoSalva, valor: string) => {
+    if (!cotacaoEmEdicao) return;
+
+    setCotacaoEmEdicao({
+      ...cotacaoEmEdicao,
+      [campo]: valor,
+    });
+  };
+
+  const atualizarProduto = (
+    produtoIndex: number,
+    campo: keyof Produto,
+    valor: string | number
+  ) => {
+    if (!cotacaoEmEdicao) return;
+
+    const novosProdutos = [...cotacaoEmEdicao.produtos];
+    novosProdutos[produtoIndex] = {
+      ...novosProdutos[produtoIndex],
+      [campo]: valor,
+    };
+
+    setCotacaoEmEdicao({
+      ...cotacaoEmEdicao,
+      produtos: novosProdutos,
+    });
+  };
+
+  const adicionarProduto = () => {
+    if (!cotacaoEmEdicao) return;
+
+    setCotacaoEmEdicao({
+      ...cotacaoEmEdicao,
+      produtos: [
+        ...cotacaoEmEdicao.produtos,
+        { id: Date.now().toString(), nome: "", quantidade: 1, peso: "" }
+      ]
+    });
+  };
+
+  const removerProduto = (produtoIndex: number) => {
+    if (!cotacaoEmEdicao || cotacaoEmEdicao.produtos.length <= 1) return;
+
+    const novosProdutos = cotacaoEmEdicao.produtos.filter((_, idx) => idx !== produtoIndex);
+    
+    setCotacaoEmEdicao({
+      ...cotacaoEmEdicao,
+      produtos: novosProdutos
+    });
+  };
+
   const atualizarStatus = (transportadoraIndex: number, status: string) => {
     if (cotacaoEmEdicao) {
       atualizarTransportadora(transportadoraIndex, "status", status);
@@ -124,6 +175,10 @@ const Historico = ({ historico, setHistorico }: HistoricoProps) => {
                 cancelarEdicao={cancelarEdicao}
                 atualizarTransportadora={atualizarTransportadora}
                 atualizarStatus={atualizarStatus}
+                atualizarCampo={atualizarCampo}
+                atualizarProduto={atualizarProduto}
+                adicionarProduto={adicionarProduto}
+                removerProduto={removerProduto}
               />
             ))}
           </div>
