@@ -1,12 +1,184 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import { useEffect, useState } from "react";
+import ClienteForm from "@/components/ClienteForm";
+import ProdutosTable from "@/components/ProdutosTable";
+import TransportadorasTable from "@/components/TransportadorasTable";
+import Observacoes from "@/components/Observacoes";
+import ActionButtons from "@/components/ActionButtons";
+import EmailPreview from "@/components/EmailPreview";
+import Historico from "@/components/Historico";
+import { CotacaoSalva, Produto, Transportadora } from "@/types";
+import { Card, CardContent } from "@/components/ui/card";
 
 const Index = () => {
+  // Estado para informações do cliente
+  const [cliente, setCliente] = useState("");
+  const [endereco, setEndereco] = useState("");
+  const [cidade, setCidade] = useState("");
+  const [estado, setEstado] = useState("");
+  const [cep, setCep] = useState("");
+  const [fazenda, setFazenda] = useState("");
+  const [observacoes, setObservacoes] = useState("");
+
+  // Estado para produtos e transportadoras
+  const [produtos, setProdutos] = useState<Produto[]>([
+    { id: "1", nome: "", quantidade: 1, peso: "" },
+  ]);
+  const [transportadoras, setTransportadoras] = useState<Transportadora[]>([
+    { id: "1", nome: "", prazo: "", valorUnitario: "", valorTotal: "", status: "Pendente" },
+  ]);
+
+  // Estado para histórico e preview de email
+  const [historico, setHistorico] = useState<CotacaoSalva[]>([]);
+  const [emailAberto, setEmailAberto] = useState(false);
+
+  // Carregar histórico salvo ao iniciar
+  useEffect(() => {
+    const historicoSalvo = localStorage.getItem("cotacoes");
+    if (historicoSalvo) {
+      setHistorico(JSON.parse(historicoSalvo));
+    }
+  }, []);
+
+  // Função para calcular o total de cada transportadora
+  const calcularTotal = (id: string, valorUnitarioStr: string) => {
+    const valorUnitario = parseFloat(valorUnitarioStr) || 0;
+
+    // Calcular a soma total de quantidades de produtos
+    const qtdTotal = produtos.reduce(
+      (total, produto) => total + (produto.quantidade || 0),
+      0
+    );
+
+    const valorTotal = valorUnitario * qtdTotal;
+
+    setTransportadoras(
+      transportadoras.map((transp) =>
+        transp.id === id
+          ? { ...transp, valorTotal: valorTotal.toFixed(2) }
+          : transp
+      )
+    );
+  };
+
+  // Atualizar todos os totais quando mudar a quantidade de produtos
+  const atualizarTotais = () => {
+    transportadoras.forEach((transp) => {
+      if (transp.valorUnitario) {
+        calcularTotal(transp.id, transp.valorUnitario);
+      }
+    });
+  };
+
+  // Salvar cotação no histórico
+  const salvarCotacao = () => {
+    if (!cliente) {
+      return;
+    }
+
+    const novaCotacao: CotacaoSalva = {
+      id: "cotacao-" + Date.now().toString(),
+      cliente,
+      fazenda,
+      data: new Date().toLocaleDateString(),
+      endereco,
+      cidade,
+      estado,
+      cep,
+      produtos: produtos.filter((p) => p.nome),
+      transportadoras: transportadoras.filter((t) => t.nome),
+      observacoes,
+    };
+
+    const novoHistorico = [novaCotacao, ...historico];
+    setHistorico(novoHistorico);
+    localStorage.setItem("cotacoes", JSON.stringify(novoHistorico));
+  };
+
+  // Limpar formulário para nova cotação
+  const limparFormulario = () => {
+    setCliente("");
+    setEndereco("");
+    setCidade("");
+    setEstado("");
+    setCep("");
+    setFazenda("");
+    setObservacoes("");
+    setProdutos([{ id: "1", nome: "", quantidade: 1, peso: "" }]);
+    setTransportadoras([
+      { id: "1", nome: "", prazo: "", valorUnitario: "", valorTotal: "", status: "Pendente" },
+    ]);
+  };
+
+  // Exibir preview do email
+  const exportarEmail = () => {
+    if (!cliente) {
+      return;
+    }
+
+    setEmailAberto(true);
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
-      </div>
+    <div className="container max-w-6xl py-8">
+      <h1 className="text-center">Planilha de Cotação de Frete</h1>
+
+      <Card className="mb-8">
+        <CardContent className="pt-6 space-y-8">
+          <ClienteForm
+            cliente={cliente}
+            setCliente={setCliente}
+            endereco={endereco}
+            setEndereco={setEndereco}
+            cidade={cidade}
+            setCidade={setCidade}
+            estado={estado}
+            setEstado={setEstado}
+            cep={cep}
+            setCep={setCep}
+            fazenda={fazenda}
+            setFazenda={setFazenda}
+          />
+
+          <ProdutosTable
+            produtos={produtos}
+            setProdutos={setProdutos}
+            atualizarTotais={atualizarTotais}
+          />
+
+          <TransportadorasTable
+            transportadoras={transportadoras}
+            setTransportadoras={setTransportadoras}
+            calcularTotal={calcularTotal}
+          />
+
+          <Observacoes
+            observacoes={observacoes}
+            setObservacoes={setObservacoes}
+          />
+
+          <ActionButtons
+            salvarCotacao={salvarCotacao}
+            exportarEmail={exportarEmail}
+            limparFormulario={limparFormulario}
+          />
+        </CardContent>
+      </Card>
+
+      <Historico historico={historico} setHistorico={setHistorico} />
+
+      <EmailPreview
+        open={emailAberto}
+        setOpen={setEmailAberto}
+        cliente={cliente}
+        endereco={endereco}
+        cidade={cidade}
+        estado={estado}
+        cep={cep}
+        fazenda={fazenda}
+        produtos={produtos}
+        observacoes={observacoes}
+      />
     </div>
   );
 };
