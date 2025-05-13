@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { Save, Send, FilePlus } from "lucide-react";
 
 interface ActionButtonsProps {
   salvarCotacao: () => void;
@@ -20,13 +21,16 @@ const ActionButtons = ({
   
   return (
     <div className="flex flex-wrap gap-3 mt-6">
-      <Button onClick={handleSalvar}>
+      <Button onClick={handleSalvar} className="shadow-sm">
+        <Save className="mr-2 h-4 w-4" />
         Salvar Cotação
       </Button>
-      <Button onClick={exportarEmail} variant="outline">
+      <Button onClick={exportarEmail} variant="outline" className="shadow-sm">
+        <Send className="mr-2 h-4 w-4" />
         Gerar Email
       </Button>
-      <Button onClick={limparFormulario} variant="secondary">
+      <Button onClick={limparFormulario} variant="secondary" className="shadow-sm">
+        <FilePlus className="mr-2 h-4 w-4" />
         Nova Cotação
       </Button>
     </div>

@@ -9,6 +9,7 @@ import EmailPreview from "@/components/EmailPreview";
 import Historico from "@/components/Historico";
 import { CotacaoSalva, Produto, Transportadora } from "@/types";
 import { Card, CardContent } from "@/components/ui/card";
+import { PackageIcon, TruckIcon } from "lucide-react";
 
 const Index = () => {
   // Estado para informações do cliente
@@ -121,10 +122,18 @@ const Index = () => {
 
   return (
     <div className="container max-w-6xl py-8">
-      <h1 className="text-center">Planilha de Cotação de Frete</h1>
+      <div className="flex items-center justify-center gap-3 mb-6">
+        <TruckIcon className="h-8 w-8 text-primary" />
+        <h1 className="text-3xl font-bold text-center">Planilha de Cotação de Frete</h1>
+      </div>
 
-      <Card className="mb-8">
-        <CardContent className="pt-6 space-y-8">
+      <Card className="mb-8 border-t-4 border-t-primary shadow-md">
+        <CardContent className="p-6 space-y-8">
+          <div className="flex items-center gap-2 pb-2 mb-4 border-b">
+            <PackageIcon className="h-5 w-5 text-primary" />
+            <h2 className="text-xl font-semibold">Nova Cotação</h2>
+          </div>
+          
           <ClienteForm
             cliente={cliente}
             setCliente={setCliente}

@@ -4,6 +4,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { CotacaoSalva, Transportadora } from "@/types";
 import HistoricoItem from "./HistoricoItem";
 import { toast } from "sonner";
+import { TruckIcon } from "lucide-react";
 
 interface HistoricoProps {
   historico: CotacaoSalva[];
@@ -94,12 +95,22 @@ const Historico = ({ historico, setHistorico }: HistoricoProps) => {
 
   return (
     <div className="mt-8">
-      <h2>Histórico de Cotações</h2>
+      <div className="flex items-center gap-2 mb-4">
+        <TruckIcon className="h-5 w-5 text-primary" />
+        <h2 className="text-xl font-bold">Histórico de Cotações</h2>
+      </div>
+      
       <ScrollArea className="max-h-[600px] pr-4">
         {historico.length === 0 ? (
-          <p className="text-center text-muted-foreground py-8">
-            Nenhuma cotação salva.
-          </p>
+          <div className="text-center py-12 bg-muted/20 rounded-lg border border-dashed">
+            <TruckIcon className="h-12 w-12 text-muted-foreground mx-auto mb-3 opacity-50" />
+            <p className="text-muted-foreground">
+              Nenhuma cotação salva ainda.
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              As cotações salvas aparecerão aqui.
+            </p>
+          </div>
         ) : (
           <div>
             {historico.map((item) => (
