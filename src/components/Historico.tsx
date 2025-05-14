@@ -130,48 +130,40 @@ const Historico = ({ historico, setHistorico }: HistoricoProps) => {
 
   // Função para atualizar o status de uma transportadora
   const atualizarStatus = (cotacaoId: string, transportadoraIndex: number, status: string) => {
-    if (cotacaoEmEdicao && cotacaoEmEdicao.id === cotacaoId) {
-      atualizarTransportadora(transportadoraIndex, "status", status);
-    } else {
-      // Atualizar status diretamente sem edição completa
-      const novasCotacoes = historico.map(item => {
-        if (item.id === cotacaoId) {
-          const novasTransportadoras = [...item.transportadoras];
-          novasTransportadoras[transportadoraIndex] = {
-            ...novasTransportadoras[transportadoraIndex],
-            status: status
-          };
-          return {...item, transportadoras: novasTransportadoras};
-        }
-        return item;
-      });
-      
-      setHistorico(novasCotacoes);
-      localStorage.setItem("cotacoes", JSON.stringify(novasCotacoes));
-    }
+    const novoCotacoes = historico.map(item => {
+      if (item.id === cotacaoId) {
+        const novasTransportadoras = [...item.transportadoras];
+        novasTransportadoras[transportadoraIndex] = {
+          ...novasTransportadoras[transportadoraIndex],
+          status: status
+        };
+        return {...item, transportadoras: novasTransportadoras};
+      }
+      return item;
+    });
+    
+    setHistorico(novoCotacoes);
+    localStorage.setItem("cotacoes", JSON.stringify(novoCotacoes));
+    toast.success("Status atualizado com sucesso!");
   };
   
   // Função para atualizar a proposta final de uma transportadora
   const atualizarPropostaFinal = (cotacaoId: string, transportadoraIndex: number, propostaFinal: string) => {
-    if (cotacaoEmEdicao && cotacaoEmEdicao.id === cotacaoId) {
-      atualizarTransportadora(transportadoraIndex, "propostaFinal", propostaFinal);
-    } else {
-      // Atualizar proposta final diretamente sem edição completa
-      const novasCotacoes = historico.map(item => {
-        if (item.id === cotacaoId) {
-          const novasTransportadoras = [...item.transportadoras];
-          novasTransportadoras[transportadoraIndex] = {
-            ...novasTransportadoras[transportadoraIndex],
-            propostaFinal: propostaFinal
-          };
-          return {...item, transportadoras: novasTransportadoras};
-        }
-        return item;
-      });
-      
-      setHistorico(novasCotacoes);
-      localStorage.setItem("cotacoes", JSON.stringify(novasCotacoes));
-    }
+    const novoCotacoes = historico.map(item => {
+      if (item.id === cotacaoId) {
+        const novasTransportadoras = [...item.transportadoras];
+        novasTransportadoras[transportadoraIndex] = {
+          ...novasTransportadoras[transportadoraIndex],
+          propostaFinal: propostaFinal
+        };
+        return {...item, transportadoras: novasTransportadoras};
+      }
+      return item;
+    });
+    
+    setHistorico(novoCotacoes);
+    localStorage.setItem("cotacoes", JSON.stringify(novoCotacoes));
+    toast.success("Proposta final atualizada com sucesso!");
   };
 
   return (
