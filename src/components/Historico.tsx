@@ -15,6 +15,7 @@ const Historico = ({ historico, setHistorico }: HistoricoProps) => {
   const [itemEditando, setItemEditando] = useState<string | null>(null);
   const [cotacaoEmEdicao, setCotacaoEmEdicao] = useState<CotacaoSalva | null>(null);
 
+  // Função para remover uma cotação do histórico
   const removerCotacao = (id: string) => {
     const novoCotacoes = historico.filter((item) => item.id !== id);
     setHistorico(novoCotacoes);
@@ -22,14 +23,16 @@ const Historico = ({ historico, setHistorico }: HistoricoProps) => {
     toast.success("Cotação removida com sucesso!");
   };
 
+  // Função para iniciar a edição de uma cotação
   const editarCotacao = (id: string) => {
     const cotacao = historico.find((item) => item.id === id);
     if (cotacao) {
       setItemEditando(id);
-      setCotacaoEmEdicao({ ...cotacao });
+      setCotacaoEmEdicao(JSON.parse(JSON.stringify(cotacao))); // Deep clone para evitar referências
     }
   };
 
+  // Função para salvar as edições feitas em uma cotação
   const salvarEdicao = () => {
     if (!cotacaoEmEdicao) return;
 
@@ -44,11 +47,13 @@ const Historico = ({ historico, setHistorico }: HistoricoProps) => {
     toast.success("Cotação atualizada com sucesso!");
   };
 
+  // Função para cancelar a edição
   const cancelarEdicao = () => {
     setItemEditando(null);
     setCotacaoEmEdicao(null);
   };
 
+  // Função para atualizar uma transportadora durante a edição
   const atualizarTransportadora = (
     transportadoraIndex: number, 
     campo: keyof Transportadora, 
@@ -68,6 +73,7 @@ const Historico = ({ historico, setHistorico }: HistoricoProps) => {
     });
   };
 
+  // Função para atualizar um campo da cotação durante a edição
   const atualizarCampo = (campo: keyof CotacaoSalva, valor: string) => {
     if (!cotacaoEmEdicao) return;
 
@@ -77,6 +83,7 @@ const Historico = ({ historico, setHistorico }: HistoricoProps) => {
     });
   };
 
+  // Função para atualizar um produto durante a edição
   const atualizarProduto = (
     produtoIndex: number,
     campo: keyof Produto,
@@ -96,6 +103,7 @@ const Historico = ({ historico, setHistorico }: HistoricoProps) => {
     });
   };
 
+  // Função para adicionar um novo produto durante a edição
   const adicionarProduto = () => {
     if (!cotacaoEmEdicao) return;
 
@@ -108,6 +116,7 @@ const Historico = ({ historico, setHistorico }: HistoricoProps) => {
     });
   };
 
+  // Função para remover um produto durante a edição
   const removerProduto = (produtoIndex: number) => {
     if (!cotacaoEmEdicao || cotacaoEmEdicao.produtos.length <= 1) return;
 
@@ -119,16 +128,14 @@ const Historico = ({ historico, setHistorico }: HistoricoProps) => {
     });
   };
 
+  // Função para atualizar o status de uma transportadora
   const atualizarStatus = (transportadoraIndex: number, status: string) => {
     if (cotacaoEmEdicao) {
       atualizarTransportadora(transportadoraIndex, "status", status);
     } else {
       // Atualizar status diretamente sem edição completa
-      const cotacaoAtual = historico.find(item => item.id === itemEditando);
-      if (!cotacaoAtual) return;
-      
       const novasCotacoes = historico.map(item => {
-        if (item.id === cotacaoAtual.id) {
+        if (item.id === itemEditando) {
           const novasTransportadoras = [...item.transportadoras];
           novasTransportadoras[transportadoraIndex] = {
             ...novasTransportadoras[transportadoraIndex],
@@ -144,6 +151,7 @@ const Historico = ({ historico, setHistorico }: HistoricoProps) => {
     }
   };
   
+  // Função para atualizar a proposta final de uma transportadora
   const atualizarPropostaFinal = (transportadoraIndex: number, propostaFinal: string) => {
     if (cotacaoEmEdicao) {
       atualizarTransportadora(transportadoraIndex, "propostaFinal", propostaFinal);

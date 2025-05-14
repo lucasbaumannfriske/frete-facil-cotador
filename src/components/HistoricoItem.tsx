@@ -211,7 +211,6 @@ const HistoricoItem = ({
                 <div
                   key={idx}
                   className="p-3 rounded-md bg-muted/30 border border-muted"
-                  id={`transp-${item.id}-${transp.nome?.replace(/\s+/g, "") || idx}`}
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-3">
                     {modoEdicao ? (
@@ -234,13 +233,13 @@ const HistoricoItem = ({
                       <span className="text-xs text-muted-foreground block mb-1">Prazo:</span>
                       {modoEdicao ? (
                         <Input
-                          className="edit-prazo h-8"
+                          className="h-8"
                           value={transp.prazo || ""}
                           onChange={(e) => atualizarTransportadora(idx, "prazo", e.target.value)}
                           placeholder="Prazo"
                         />
                       ) : (
-                        <span className="prazo font-medium">
+                        <span className="font-medium">
                           {transp.prazo || "N/A"} dias
                         </span>
                       )}
@@ -250,15 +249,14 @@ const HistoricoItem = ({
                       <span className="text-xs text-muted-foreground block mb-1">Valor Unitário:</span>
                       {modoEdicao ? (
                         <Input
-                          type="number"
-                          className="edit-valorUnitario h-8"
+                          type="text"
+                          className="h-8"
                           value={transp.valorUnitario || ""}
                           onChange={(e) => atualizarTransportadora(idx, "valorUnitario", e.target.value)}
                           placeholder="Valor unitário"
-                          step="0.01"
                         />
                       ) : (
-                        <span className="valorUnitario font-medium">
+                        <span className="font-medium">
                           R$ {transp.valorUnitario || "A determinar"}
                         </span>
                       )}
@@ -268,15 +266,14 @@ const HistoricoItem = ({
                       <span className="text-xs text-muted-foreground block mb-1">Valor Total:</span>
                       {modoEdicao ? (
                         <Input
-                          type="number"
-                          className="edit-valorTotal h-8"
+                          type="text"
+                          className="h-8"
                           value={transp.valorTotal || ""}
                           onChange={(e) => atualizarTransportadora(idx, "valorTotal", e.target.value)}
                           placeholder="Valor total"
-                          step="0.01"
                         />
                       ) : (
-                        <span className="valorTotal font-medium">
+                        <span className="font-medium">
                           R$ {transp.valorTotal || "A determinar"}
                         </span>
                       )}
@@ -286,13 +283,13 @@ const HistoricoItem = ({
                       <span className="text-xs text-muted-foreground block mb-1">Proposta Final:</span>
                       {modoEdicao ? (
                         <Input
-                          className="edit-propostaFinal h-8"
+                          className="h-8"
                           value={transp.propostaFinal || ""}
                           onChange={(e) => atualizarTransportadora(idx, "propostaFinal", e.target.value)}
                           placeholder="Proposta final"
                         />
                       ) : (
-                        <span className="propostaFinal font-medium flex items-center gap-1">
+                        <span className="font-medium flex items-center gap-1">
                           <FileText className="h-3 w-3" />
                           {transp.propostaFinal || "A definir"}
                         </span>
@@ -303,10 +300,10 @@ const HistoricoItem = ({
                       <span className="text-xs text-muted-foreground block mb-1">Status:</span>
                       {modoEdicao ? (
                         <Select 
-                          value={transp.status}
+                          value={transp.status || "Pendente"}
                           onValueChange={(value) => atualizarStatus(idx, value)}
                         >
-                          <SelectTrigger className="edit-status h-8">
+                          <SelectTrigger className="h-8">
                             <SelectValue placeholder="Status" />
                           </SelectTrigger>
                           <SelectContent>
@@ -317,10 +314,10 @@ const HistoricoItem = ({
                         </Select>
                       ) : (
                         <Select 
-                          value={transp.status}
+                          value={transp.status || "Pendente"}
                           onValueChange={(value) => atualizarStatus(idx, value)}
                         >
-                          <SelectTrigger className="hist-status h-8">
+                          <SelectTrigger className="h-8">
                             <SelectValue placeholder="Status" />
                           </SelectTrigger>
                           <SelectContent>

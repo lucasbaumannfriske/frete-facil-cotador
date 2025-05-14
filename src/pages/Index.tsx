@@ -10,6 +10,7 @@ import Historico from "@/components/Historico";
 import { CotacaoSalva, Produto, Transportadora } from "@/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { PackageIcon, TruckIcon } from "lucide-react";
+import { toast } from "sonner";
 
 const Index = () => {
   // Estado para informações do cliente/tomador
@@ -33,7 +34,7 @@ const Index = () => {
     { id: "1", nome: "", quantidade: 1, peso: "" },
   ]);
   const [transportadoras, setTransportadoras] = useState<Transportadora[]>([
-    { id: "1", nome: "", prazo: "", valorUnitario: "", valorTotal: "", status: "Pendente" },
+    { id: "1", nome: "", prazo: "", valorUnitario: "", valorTotal: "", status: "Pendente", propostaFinal: "" },
   ]);
 
   // Estado para histórico e preview de email
@@ -44,7 +45,13 @@ const Index = () => {
   useEffect(() => {
     const historicoSalvo = localStorage.getItem("cotacoes");
     if (historicoSalvo) {
-      setHistorico(JSON.parse(historicoSalvo));
+      try {
+        const cotacoesParsed = JSON.parse(historicoSalvo);
+        setHistorico(cotacoesParsed);
+      } catch (error) {
+        console.error("Erro ao carregar histórico:", error);
+        localStorage.removeItem("cotacoes");
+      }
     }
   }, []);
 
@@ -81,6 +88,21 @@ const Index = () => {
   // Salvar cotação no histórico
   const salvarCotacao = () => {
     if (!cliente) {
+      toast.error("Por favor, informe o nome do cliente");
+      return;
+    }
+
+    // Filtrar produtos e transportadoras vazios
+    const produtosValidos = produtos.filter((p) => p.nome.trim() !== "");
+    const transportadorasValidas = transportadoras.filter((t) => t.nome.trim() !== "");
+
+    if (produtosValidos.length === 0) {
+      toast.error("Adicione pelo menos um produto");
+      return;
+    }
+
+    if (transportadorasValidas.length === 0) {
+      toast.error("Adicione pelo menos uma transportadora");
       return;
     }
 
@@ -93,14 +115,18 @@ const Index = () => {
       cidade,
       estado,
       cep,
-      produtos: produtos.filter((p) => p.nome),
-      transportadoras: transportadoras.filter((t) => t.nome),
+      origem,
+      destino,
+      roteiro,
+      produtos: produtosValidos,
+      transportadoras: transportadorasValidas,
       observacoes,
     };
 
     const novoHistorico = [novaCotacao, ...historico];
     setHistorico(novoHistorico);
     localStorage.setItem("cotacoes", JSON.stringify(novoHistorico));
+    toast.success("Cotação salva com sucesso!");
   };
 
   // Limpar formulário para nova cotação
@@ -117,13 +143,15 @@ const Index = () => {
     setObservacoes("");
     setProdutos([{ id: "1", nome: "", quantidade: 1, peso: "" }]);
     setTransportadoras([
-      { id: "1", nome: "", prazo: "", valorUnitario: "", valorTotal: "", status: "Pendente" },
+      { id: "1", nome: "", prazo: "", valorUnitario: "", valorTotal: "", status: "Pendente", propostaFinal: "" },
     ]);
+    toast.info("Formulário limpo");
   };
 
   // Exibir preview do email
   const exportarEmail = () => {
     if (!cliente) {
+      toast.error("Por favor, informe o nome do cliente");
       return;
     }
 

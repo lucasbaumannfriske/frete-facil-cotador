@@ -119,14 +119,16 @@ const TransportadorasTable = ({
                   />
                 </TableCell>
                 <TableCell>
-                  <Input
-                    value={transp.propostaFinal || ""}
-                    onChange={(e) =>
-                      atualizarTransportadora(transp.id, "propostaFinal", e.target.value)
-                    }
-                    placeholder="Proposta final"
-                    className="flex items-center gap-1"
-                  />
+                  <div className="flex items-center gap-1">
+                    <FileText className="h-4 w-4 text-muted-foreground" />
+                    <Input
+                      value={transp.propostaFinal || ""}
+                      onChange={(e) =>
+                        atualizarTransportadora(transp.id, "propostaFinal", e.target.value)
+                      }
+                      placeholder="Proposta final"
+                    />
+                  </div>
                 </TableCell>
                 <TableCell>
                   <Button
