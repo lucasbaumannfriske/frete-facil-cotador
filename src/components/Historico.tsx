@@ -129,13 +129,13 @@ const Historico = ({ historico, setHistorico }: HistoricoProps) => {
   };
 
   // Função para atualizar o status de uma transportadora
-  const atualizarStatus = (transportadoraIndex: number, status: string) => {
-    if (cotacaoEmEdicao) {
+  const atualizarStatus = (cotacaoId: string, transportadoraIndex: number, status: string) => {
+    if (cotacaoEmEdicao && cotacaoEmEdicao.id === cotacaoId) {
       atualizarTransportadora(transportadoraIndex, "status", status);
     } else {
       // Atualizar status diretamente sem edição completa
       const novasCotacoes = historico.map(item => {
-        if (item.id === itemEditando) {
+        if (item.id === cotacaoId) {
           const novasTransportadoras = [...item.transportadoras];
           novasTransportadoras[transportadoraIndex] = {
             ...novasTransportadoras[transportadoraIndex],
@@ -152,13 +152,13 @@ const Historico = ({ historico, setHistorico }: HistoricoProps) => {
   };
   
   // Função para atualizar a proposta final de uma transportadora
-  const atualizarPropostaFinal = (transportadoraIndex: number, propostaFinal: string) => {
-    if (cotacaoEmEdicao) {
+  const atualizarPropostaFinal = (cotacaoId: string, transportadoraIndex: number, propostaFinal: string) => {
+    if (cotacaoEmEdicao && cotacaoEmEdicao.id === cotacaoId) {
       atualizarTransportadora(transportadoraIndex, "propostaFinal", propostaFinal);
     } else {
       // Atualizar proposta final diretamente sem edição completa
       const novasCotacoes = historico.map(item => {
-        if (item.id === itemEditando) {
+        if (item.id === cotacaoId) {
           const novasTransportadoras = [...item.transportadoras];
           novasTransportadoras[transportadoraIndex] = {
             ...novasTransportadoras[transportadoraIndex],
@@ -193,7 +193,7 @@ const Historico = ({ historico, setHistorico }: HistoricoProps) => {
             </p>
           </div>
         ) : (
-          <div>
+          <div className="space-y-4">
             {historico.map((item) => (
               <HistoricoItem
                 key={item.id}
@@ -204,12 +204,12 @@ const Historico = ({ historico, setHistorico }: HistoricoProps) => {
                 salvarEdicao={salvarEdicao}
                 cancelarEdicao={cancelarEdicao}
                 atualizarTransportadora={atualizarTransportadora}
-                atualizarStatus={atualizarStatus}
+                atualizarStatus={(transportadoraIndex, status) => atualizarStatus(item.id, transportadoraIndex, status)}
                 atualizarCampo={atualizarCampo}
                 atualizarProduto={atualizarProduto}
                 adicionarProduto={adicionarProduto}
                 removerProduto={removerProduto}
-                atualizarPropostaFinal={atualizarPropostaFinal}
+                atualizarPropostaFinal={(transportadoraIndex, proposta) => atualizarPropostaFinal(item.id, transportadoraIndex, proposta)}
               />
             ))}
           </div>

@@ -224,7 +224,7 @@ const HistoricoItem = ({
                       <span className="font-medium text-primary">{transp.nome}</span>
                     )}
                     {!modoEdicao && (
-                      <StatusBadge status={transp.status} className="sm:ml-auto" />
+                      <StatusBadge status={transp.status || "Pendente"} className="sm:ml-auto" />
                     )}
                   </div>
                   
@@ -289,44 +289,30 @@ const HistoricoItem = ({
                           placeholder="Proposta final"
                         />
                       ) : (
-                        <span className="font-medium flex items-center gap-1">
-                          <FileText className="h-3 w-3" />
-                          {transp.propostaFinal || "A definir"}
-                        </span>
+                        <Input
+                          className="h-8"
+                          value={transp.propostaFinal || ""}
+                          onChange={(e) => atualizarPropostaFinal(idx, e.target.value)}
+                          placeholder="Proposta final"
+                        />
                       )}
                     </div>
                     
                     <div className="bg-background rounded p-2">
                       <span className="text-xs text-muted-foreground block mb-1">Status:</span>
-                      {modoEdicao ? (
-                        <Select 
-                          value={transp.status || "Pendente"}
-                          onValueChange={(value) => atualizarStatus(idx, value)}
-                        >
-                          <SelectTrigger className="h-8">
-                            <SelectValue placeholder="Status" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Pendente">Pendente</SelectItem>
-                            <SelectItem value="Aprovado">Aprovado</SelectItem>
-                            <SelectItem value="Recusado">Recusado</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      ) : (
-                        <Select 
-                          value={transp.status || "Pendente"}
-                          onValueChange={(value) => atualizarStatus(idx, value)}
-                        >
-                          <SelectTrigger className="h-8">
-                            <SelectValue placeholder="Status" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Pendente">Pendente</SelectItem>
-                            <SelectItem value="Aprovado">Aprovado</SelectItem>
-                            <SelectItem value="Recusado">Recusado</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      )}
+                      <Select 
+                        value={transp.status || "Pendente"}
+                        onValueChange={(value) => atualizarStatus(idx, value)}
+                      >
+                        <SelectTrigger className="h-8">
+                          <SelectValue placeholder="Status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Pendente">Pendente</SelectItem>
+                          <SelectItem value="Aprovado">Aprovado</SelectItem>
+                          <SelectItem value="Recusado">Recusado</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                 </div>
@@ -380,7 +366,7 @@ const HistoricoItem = ({
                   className="gap-1"
                 >
                   <Trash2 className="h-4 w-4" />
-                  Apagar
+                  Excluir
                 </Button>
               </>
             )}
