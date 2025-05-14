@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/select";
 import { CotacaoSalva, Transportadora, Produto } from "@/types";
 import { StatusBadge } from "./StatusBadge";
-import { CalendarIcon, MapPinIcon, TruckIcon, PackageIcon, Edit, Trash2 } from "lucide-react";
+import { CalendarIcon, MapPinIcon, TruckIcon, PackageIcon, Edit, Trash2, FileText } from "lucide-react";
 
 interface HistoricoItemProps {
   item: CotacaoSalva;
@@ -34,6 +34,7 @@ interface HistoricoItemProps {
   atualizarProduto: (produtoIndex: number, campo: keyof Produto, valor: string | number) => void;
   adicionarProduto: () => void;
   removerProduto: (produtoIndex: number) => void;
+  atualizarPropostaFinal: (transportadoraIndex: number, propostaFinal: string) => void;
 }
 
 const HistoricoItem = ({
@@ -49,6 +50,7 @@ const HistoricoItem = ({
   atualizarProduto,
   adicionarProduto,
   removerProduto,
+  atualizarPropostaFinal,
 }: HistoricoItemProps) => {
   return (
     <Card className="mb-4 overflow-hidden border-l-4 border-l-primary">
@@ -227,7 +229,7 @@ const HistoricoItem = ({
                     )}
                   </div>
                   
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3">
                     <div className="bg-background rounded p-2">
                       <span className="text-xs text-muted-foreground block mb-1">Prazo:</span>
                       {modoEdicao ? (
@@ -276,6 +278,23 @@ const HistoricoItem = ({
                       ) : (
                         <span className="valorTotal font-medium">
                           R$ {transp.valorTotal || "A determinar"}
+                        </span>
+                      )}
+                    </div>
+                    
+                    <div className="bg-background rounded p-2">
+                      <span className="text-xs text-muted-foreground block mb-1">Proposta Final:</span>
+                      {modoEdicao ? (
+                        <Input
+                          className="edit-propostaFinal h-8"
+                          value={transp.propostaFinal || ""}
+                          onChange={(e) => atualizarTransportadora(idx, "propostaFinal", e.target.value)}
+                          placeholder="Proposta final"
+                        />
+                      ) : (
+                        <span className="propostaFinal font-medium flex items-center gap-1">
+                          <FileText className="h-3 w-3" />
+                          {transp.propostaFinal || "A definir"}
                         </span>
                       )}
                     </div>

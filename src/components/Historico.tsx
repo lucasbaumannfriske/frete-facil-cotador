@@ -143,6 +143,28 @@ const Historico = ({ historico, setHistorico }: HistoricoProps) => {
       localStorage.setItem("cotacoes", JSON.stringify(novasCotacoes));
     }
   };
+  
+  const atualizarPropostaFinal = (transportadoraIndex: number, propostaFinal: string) => {
+    if (cotacaoEmEdicao) {
+      atualizarTransportadora(transportadoraIndex, "propostaFinal", propostaFinal);
+    } else {
+      // Atualizar proposta final diretamente sem edição completa
+      const novasCotacoes = historico.map(item => {
+        if (item.id === itemEditando) {
+          const novasTransportadoras = [...item.transportadoras];
+          novasTransportadoras[transportadoraIndex] = {
+            ...novasTransportadoras[transportadoraIndex],
+            propostaFinal: propostaFinal
+          };
+          return {...item, transportadoras: novasTransportadoras};
+        }
+        return item;
+      });
+      
+      setHistorico(novasCotacoes);
+      localStorage.setItem("cotacoes", JSON.stringify(novasCotacoes));
+    }
+  };
 
   return (
     <div className="mt-8">
@@ -179,6 +201,7 @@ const Historico = ({ historico, setHistorico }: HistoricoProps) => {
                 atualizarProduto={atualizarProduto}
                 adicionarProduto={adicionarProduto}
                 removerProduto={removerProduto}
+                atualizarPropostaFinal={atualizarPropostaFinal}
               />
             ))}
           </div>

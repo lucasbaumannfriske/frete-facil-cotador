@@ -10,6 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Transportadora } from "@/types";
+import { FileText } from "lucide-react";
 
 interface TransportadorasTableProps {
   transportadoras: Transportadora[];
@@ -32,6 +33,7 @@ const TransportadorasTable = ({
         valorUnitario: "",
         valorTotal: "",
         status: "Pendente",
+        propostaFinal: "", // Inicializa o campo de proposta final
       },
     ]);
   };
@@ -67,6 +69,7 @@ const TransportadorasTable = ({
               <TableHead>Prazo Estimado (dias)</TableHead>
               <TableHead>Valor Unitário (R$)</TableHead>
               <TableHead>Valor Total (R$)</TableHead>
+              <TableHead>Proposta Final</TableHead>
               <TableHead className="w-[100px]">Ação</TableHead>
             </TableRow>
           </TableHeader>
@@ -113,6 +116,16 @@ const TransportadorasTable = ({
                     readOnly
                     className="bg-gray-50"
                     placeholder="Valor total"
+                  />
+                </TableCell>
+                <TableCell>
+                  <Input
+                    value={transp.propostaFinal || ""}
+                    onChange={(e) =>
+                      atualizarTransportadora(transp.id, "propostaFinal", e.target.value)
+                    }
+                    placeholder="Proposta final"
+                    className="flex items-center gap-1"
                   />
                 </TableCell>
                 <TableCell>
