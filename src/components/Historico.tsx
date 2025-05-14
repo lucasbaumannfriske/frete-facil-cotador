@@ -26,7 +26,7 @@ const Historico = ({ historico, setHistorico }: HistoricoProps) => {
     const cotacao = historico.find((item) => item.id === id);
     if (cotacao) {
       setItemEditando(id);
-      setCotacaoEmEdicao(JSON.parse(JSON.stringify(cotacao)));
+      setCotacaoEmEdicao({ ...cotacao });
     }
   };
 

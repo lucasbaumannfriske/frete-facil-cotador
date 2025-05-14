@@ -30,10 +30,10 @@ interface HistoricoItemProps {
   cancelarEdicao: () => void;
   atualizarTransportadora: (transportadoraIndex: number, campo: keyof Transportadora, valor: string) => void;
   atualizarStatus: (transportadoraIndex: number, status: string) => void;
-  atualizarCampo?: (campo: keyof CotacaoSalva, valor: string) => void;
-  atualizarProduto?: (produtoIndex: number, campo: keyof Produto, valor: string | number) => void;
-  adicionarProduto?: () => void;
-  removerProduto?: (produtoIndex: number) => void;
+  atualizarCampo: (campo: keyof CotacaoSalva, valor: string) => void;
+  atualizarProduto: (produtoIndex: number, campo: keyof Produto, valor: string | number) => void;
+  adicionarProduto: () => void;
+  removerProduto: (produtoIndex: number) => void;
 }
 
 const HistoricoItem = ({
@@ -59,8 +59,8 @@ const HistoricoItem = ({
               <TruckIcon className="h-5 w-5 text-primary" />
               {modoEdicao ? (
                 <Input
-                  value={item.cliente}
-                  onChange={(e) => atualizarCampo && atualizarCampo('cliente', e.target.value)}
+                  value={item.cliente || ""}
+                  onChange={(e) => atualizarCampo('cliente', e.target.value)}
                   placeholder="Nome do cliente"
                   className="inline-block"
                 />
@@ -83,8 +83,8 @@ const HistoricoItem = ({
                   <label htmlFor="cidade" className="text-xs">Cidade:</label>
                   <Input
                     id="cidade"
-                    value={item.cidade}
-                    onChange={(e) => atualizarCampo && atualizarCampo('cidade', e.target.value)}
+                    value={item.cidade || ""}
+                    onChange={(e) => atualizarCampo('cidade', e.target.value)}
                     placeholder="Cidade"
                     className="h-8"
                   />
@@ -93,8 +93,8 @@ const HistoricoItem = ({
                   <label htmlFor="estado" className="text-xs">Estado:</label>
                   <Input
                     id="estado"
-                    value={item.estado}
-                    onChange={(e) => atualizarCampo && atualizarCampo('estado', e.target.value)}
+                    value={item.estado || ""}
+                    onChange={(e) => atualizarCampo('estado', e.target.value)}
                     placeholder="Estado"
                     className="h-8"
                   />
@@ -103,8 +103,8 @@ const HistoricoItem = ({
                   <label htmlFor="fazenda" className="text-xs">Fazenda:</label>
                   <Input
                     id="fazenda"
-                    value={item.fazenda}
-                    onChange={(e) => atualizarCampo && atualizarCampo('fazenda', e.target.value)}
+                    value={item.fazenda || ""}
+                    onChange={(e) => atualizarCampo('fazenda', e.target.value)}
                     placeholder="Fazenda"
                     className="h-8"
                   />
@@ -140,29 +140,29 @@ const HistoricoItem = ({
                       {item.produtos.map((produto, idx) => (
                         <div key={idx} className="flex items-center gap-2 p-1 bg-background rounded-md border p-2">
                           <Input
-                            value={produto.nome}
-                            onChange={(e) => atualizarProduto && atualizarProduto(idx, 'nome', e.target.value)}
+                            value={produto.nome || ""}
+                            onChange={(e) => atualizarProduto(idx, 'nome', e.target.value)}
                             placeholder="Nome do produto"
                             className="flex-grow"
                           />
                           <Input
                             type="number"
-                            value={produto.quantidade}
-                            onChange={(e) => atualizarProduto && atualizarProduto(idx, 'quantidade', Number(e.target.value))}
+                            value={produto.quantidade || 1}
+                            onChange={(e) => atualizarProduto(idx, 'quantidade', Number(e.target.value))}
                             placeholder="Qtd"
                             className="w-20"
                             min="1"
                           />
                           <Input
-                            value={produto.peso}
-                            onChange={(e) => atualizarProduto && atualizarProduto(idx, 'peso', e.target.value)}
+                            value={produto.peso || ""}
+                            onChange={(e) => atualizarProduto(idx, 'peso', e.target.value)}
                             placeholder="Peso"
                             className="w-24"
                           />
                           <Button 
                             variant="destructive" 
                             size="icon" 
-                            onClick={() => removerProduto && removerProduto(idx)}
+                            onClick={() => removerProduto(idx)}
                             disabled={item.produtos.length <= 1}
                           >
                             <Trash2 className="h-4 w-4" />
@@ -170,7 +170,7 @@ const HistoricoItem = ({
                         </div>
                       ))}
                       <Button 
-                        onClick={() => adicionarProduto && adicionarProduto()}
+                        onClick={adicionarProduto}
                         size="sm" 
                         className="mt-2"
                       >
@@ -209,12 +209,12 @@ const HistoricoItem = ({
                 <div
                   key={idx}
                   className="p-3 rounded-md bg-muted/30 border border-muted"
-                  id={`transp-${item.id}-${transp.nome.replace(/\s+/g, "")}`}
+                  id={`transp-${item.id}-${transp.nome?.replace(/\s+/g, "") || idx}`}
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center gap-2 mb-3">
                     {modoEdicao ? (
                       <Input
-                        value={transp.nome}
+                        value={transp.nome || ""}
                         onChange={(e) => atualizarTransportadora(idx, "nome", e.target.value)}
                         placeholder="Nome da transportadora"
                         className="sm:max-w-[200px]"
@@ -232,12 +232,10 @@ const HistoricoItem = ({
                       <span className="text-xs text-muted-foreground block mb-1">Prazo:</span>
                       {modoEdicao ? (
                         <Input
-                          type="number"
                           className="edit-prazo h-8"
-                          value={transp.prazo}
+                          value={transp.prazo || ""}
                           onChange={(e) => atualizarTransportadora(idx, "prazo", e.target.value)}
                           placeholder="Prazo"
-                          min="1"
                         />
                       ) : (
                         <span className="prazo font-medium">
@@ -252,7 +250,7 @@ const HistoricoItem = ({
                         <Input
                           type="number"
                           className="edit-valorUnitario h-8"
-                          value={transp.valorUnitario}
+                          value={transp.valorUnitario || ""}
                           onChange={(e) => atualizarTransportadora(idx, "valorUnitario", e.target.value)}
                           placeholder="Valor unitário"
                           step="0.01"
@@ -270,7 +268,7 @@ const HistoricoItem = ({
                         <Input
                           type="number"
                           className="edit-valorTotal h-8"
-                          value={transp.valorTotal}
+                          value={transp.valorTotal || ""}
                           onChange={(e) => atualizarTransportadora(idx, "valorTotal", e.target.value)}
                           placeholder="Valor total"
                           step="0.01"
@@ -324,8 +322,8 @@ const HistoricoItem = ({
             <div className="mb-4">
               <h4 className="text-sm font-medium mb-1">Observações:</h4>
               <Textarea
-                value={item.observacoes}
-                onChange={(e) => atualizarCampo && atualizarCampo('observacoes', e.target.value)}
+                value={item.observacoes || ""}
+                onChange={(e) => atualizarCampo('observacoes', e.target.value)}
                 placeholder="Observações"
                 className="min-h-[100px]"
               />
