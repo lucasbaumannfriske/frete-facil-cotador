@@ -149,28 +149,26 @@ const Historico = ({ historico, setHistorico }: HistoricoProps) => {
   };
 
   // Função para atualizar o status de uma transportadora
-  const atualizarStatus = (cotacaoId: string, transportadoraIndex: number, status: string) => {
-    const novoCotacoes = historico.map(item => {
-      if (item.id === cotacaoId) {
-        const novasTransportadoras = [...item.transportadoras];
-        novasTransportadoras[transportadoraIndex] = {
-          ...novasTransportadoras[transportadoraIndex],
-          status: status
-        };
-        return {...item, transportadoras: novasTransportadoras};
-      }
-      return item;
+  const atualizarStatus = (transportadoraIndex: number, status: string) => {
+    if (!cotacaoEmEdicao) return;
+
+    const novasTransportadoras = [...cotacaoEmEdicao.transportadoras];
+    novasTransportadoras[transportadoraIndex] = {
+      ...novasTransportadoras[transportadoraIndex],
+      status: status
+    };
+
+    setCotacaoEmEdicao({
+      ...cotacaoEmEdicao,
+      transportadoras: novasTransportadoras
     });
-    
-    setHistorico(novoCotacoes);
-    localStorage.setItem("cotacoes", JSON.stringify(novoCotacoes));
-    toast.success("Status atualizado com sucesso!");
   };
   
   // Função para atualizar a proposta final de uma transportadora
-  const atualizarPropostaFinal = (cotacaoId: string, transportadoraIndex: number, propostaFinal: string) => {
+  const atualizarPropostaFinal = (transportadoraIndex: number, propostaFinal: string) => {
+    // Atualiza diretamente na lista de histórico sem entrar em modo de edição
     const novoCotacoes = historico.map(item => {
-      if (item.id === cotacaoId) {
+      if (item.id === itemEditando || (cotacaoEmEdicao && item.id === cotacaoEmEdicao.id)) {
         const novasTransportadoras = [...item.transportadoras];
         novasTransportadoras[transportadoraIndex] = {
           ...novasTransportadoras[transportadoraIndex],
@@ -193,7 +191,7 @@ const Historico = ({ historico, setHistorico }: HistoricoProps) => {
         <h2 className="text-xl font-bold">Histórico de Cotações</h2>
       </div>
       
-      <ScrollArea className="max-h-[600px] pr-4">
+      <ScrollArea className="h-[600px] pr-4 overflow-y-auto">
         {historico.length === 0 ? (
           <div className="text-center py-12 bg-muted/20 rounded-lg border border-dashed">
             <TruckIcon className="h-12 w-12 text-muted-foreground mx-auto mb-3 opacity-50" />
@@ -228,18 +226,18 @@ const Historico = ({ historico, setHistorico }: HistoricoProps) => {
                 <CollapsibleContent className="border-t bg-muted/10">
                   <HistoricoItem
                     item={cotacaoEmEdicao && item.id === cotacaoEmEdicao.id ? cotacaoEmEdicao : item}
-                    removerCotacao={removerCotacao}
-                    editarCotacao={editarCotacao}
+                    removerCotacao={() => removerCotacao(item.id)}
+                    editarCotacao={() => editarCotacao(item.id)}
                     modoEdicao={itemEditando === item.id}
                     salvarEdicao={salvarEdicao}
                     cancelarEdicao={cancelarEdicao}
                     atualizarTransportadora={atualizarTransportadora}
-                    atualizarStatus={(transportadoraIndex, status) => atualizarStatus(item.id, transportadoraIndex, status)}
+                    atualizarStatus={atualizarStatus}
                     atualizarCampo={atualizarCampo}
                     atualizarProduto={atualizarProduto}
                     adicionarProduto={adicionarProduto}
                     removerProduto={removerProduto}
-                    atualizarPropostaFinal={(transportadoraIndex, proposta) => atualizarPropostaFinal(item.id, transportadoraIndex, proposta)}
+                    atualizarPropostaFinal={atualizarPropostaFinal}
                   />
                 </CollapsibleContent>
               </Collapsible>

@@ -68,7 +68,11 @@ const HistoricoItem = ({
                   className="w-full"
                 />
               </div>
-            ) : null}
+            ) : (
+              <div className="flex items-center gap-2 mb-1">
+                <span className="font-medium">Cliente:</span> {item.cliente}
+              </div>
+            )}
 
             {modoEdicao ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
@@ -89,7 +93,11 @@ const HistoricoItem = ({
                   />
                 </div>
               </div>
-            ) : null}
+            ) : (
+              <div className="flex items-center gap-2 mb-1 text-sm">
+                <span className="font-medium">Local:</span> {item.cidade} - {item.estado}
+              </div>
+            )}
             
             {modoEdicao ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
@@ -110,6 +118,10 @@ const HistoricoItem = ({
                   />
                 </div>
               </div>
+            ) : item.fazenda ? (
+              <div className="flex items-center gap-2 mb-1 text-sm">
+                <span className="font-medium">Fazenda:</span> {item.fazenda}
+              </div>
             ) : null}
             
             {modoEdicao ? (
@@ -120,6 +132,10 @@ const HistoricoItem = ({
                   onChange={(e) => atualizarCampo('endereco', e.target.value)}
                   placeholder="Endereço"
                 />
+              </div>
+            ) : item.endereco ? (
+              <div className="flex items-center gap-2 mb-1 text-sm">
+                <span className="font-medium">Endereço:</span> {item.endereco}
               </div>
             ) : null}
           </div>
@@ -252,7 +268,7 @@ const HistoricoItem = ({
           <TruckIcon className="h-4 w-4 text-primary" />
           Cotações de transportadoras:
         </h4>
-        <div className="space-y-3">
+        <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
           {item.transportadoras.map((transp, idx) => (
             <div
               key={idx}
