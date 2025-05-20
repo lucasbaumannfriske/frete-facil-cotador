@@ -249,7 +249,6 @@ const HistoricoItem = ({
                       <span className="text-xs text-muted-foreground block mb-1">Valor Unitário:</span>
                       {modoEdicao ? (
                         <Input
-                          type="text"
                           className="h-8"
                           value={transp.valorUnitario || ""}
                           onChange={(e) => atualizarTransportadora(idx, "valorUnitario", e.target.value)}
@@ -266,7 +265,6 @@ const HistoricoItem = ({
                       <span className="text-xs text-muted-foreground block mb-1">Valor Total:</span>
                       {modoEdicao ? (
                         <Input
-                          type="text"
                           className="h-8"
                           value={transp.valorTotal || ""}
                           onChange={(e) => atualizarTransportadora(idx, "valorTotal", e.target.value)}
@@ -300,19 +298,35 @@ const HistoricoItem = ({
                     
                     <div className="bg-background rounded p-2">
                       <span className="text-xs text-muted-foreground block mb-1">Status:</span>
-                      <Select 
-                        value={transp.status || "Pendente"}
-                        onValueChange={(value) => atualizarStatus(idx, value)}
-                      >
-                        <SelectTrigger className="h-8">
-                          <SelectValue placeholder="Status" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Pendente">Pendente</SelectItem>
-                          <SelectItem value="Aprovado">Aprovado</SelectItem>
-                          <SelectItem value="Recusado">Recusado</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      {modoEdicao ? (
+                        <Select 
+                          value={transp.status || "Pendente"}
+                          onValueChange={(value) => atualizarTransportadora(idx, "status", value)}
+                        >
+                          <SelectTrigger className="h-8">
+                            <SelectValue placeholder="Status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Pendente">Pendente</SelectItem>
+                            <SelectItem value="Aprovado">Aprovado</SelectItem>
+                            <SelectItem value="Recusado">Recusado</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <Select 
+                          value={transp.status || "Pendente"}
+                          onValueChange={(value) => atualizarStatus(idx, value)}
+                        >
+                          <SelectTrigger className="h-8">
+                            <SelectValue placeholder="Status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Pendente">Pendente</SelectItem>
+                            <SelectItem value="Aprovado">Aprovado</SelectItem>
+                            <SelectItem value="Recusado">Recusado</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      )}
                     </div>
                   </div>
                 </div>
