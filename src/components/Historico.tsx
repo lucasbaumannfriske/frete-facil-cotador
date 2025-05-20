@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CotacaoSalva, Transportadora, Produto } from "@/types";
@@ -167,7 +166,7 @@ const Historico = ({ historico, setHistorico }: HistoricoProps) => {
   };
 
   return (
-    <div className="mt-8">
+    <div>
       <div className="flex items-center gap-2 mb-4">
         <TruckIcon className="h-5 w-5 text-primary" />
         <h2 className="text-xl font-bold">Histórico de Cotações</h2>
