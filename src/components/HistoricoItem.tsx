@@ -285,12 +285,9 @@ const HistoricoItem = ({
                       placeholder="Prazo"
                     />
                   ) : (
-                    <Input
-                      className="h-8"
-                      value={transp.prazo || ""}
-                      onChange={(e) => atualizarTransportadora(idx, "prazo", e.target.value)}
-                      placeholder="Prazo"
-                    />
+                    <div className="h-8 flex items-center text-sm">
+                      {transp.prazo || "Não informado"}
+                    </div>
                   )}
                 </div>
                 
@@ -304,12 +301,9 @@ const HistoricoItem = ({
                       placeholder="Valor unitário"
                     />
                   ) : (
-                    <Input
-                      className="h-8"
-                      value={transp.valorUnitario || ""}
-                      onChange={(e) => atualizarTransportadora(idx, "valorUnitario", e.target.value)}
-                      placeholder="Valor unitário"
-                    />
+                    <div className="h-8 flex items-center text-sm">
+                      {transp.valorUnitario || "Não informado"}
+                    </div>
                   )}
                 </div>
                 
@@ -323,12 +317,9 @@ const HistoricoItem = ({
                       placeholder="Valor total"
                     />
                   ) : (
-                    <Input
-                      className="h-8"
-                      value={transp.valorTotal || ""}
-                      onChange={(e) => atualizarTransportadora(idx, "valorTotal", e.target.value)}
-                      placeholder="Valor total"
-                    />
+                    <div className="h-8 flex items-center text-sm">
+                      {transp.valorTotal || "Não informado"}
+                    </div>
                   )}
                 </div>
                 
