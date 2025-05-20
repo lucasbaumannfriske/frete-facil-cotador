@@ -1,9 +1,15 @@
+
 import { useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CotacaoSalva, Transportadora, Produto } from "@/types";
 import HistoricoItem from "./HistoricoItem";
 import { toast } from "sonner";
-import { TruckIcon } from "lucide-react";
+import { TruckIcon, ChevronDown } from "lucide-react";
+import { 
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger 
+} from "@/components/ui/collapsible";
 
 interface HistoricoProps {
   historico: CotacaoSalva[];
@@ -13,6 +19,16 @@ interface HistoricoProps {
 const Historico = ({ historico, setHistorico }: HistoricoProps) => {
   const [itemEditando, setItemEditando] = useState<string | null>(null);
   const [cotacaoEmEdicao, setCotacaoEmEdicao] = useState<CotacaoSalva | null>(null);
+  const [expandedItems, setExpandedItems] = useState<string[]>([]);
+
+  // Toggle the expanded/collapsed state of an item
+  const toggleExpand = (id: string) => {
+    setExpandedItems(prev => 
+      prev.includes(id) 
+        ? prev.filter(item => item !== id) 
+        : [...prev, id]
+    );
+  };
 
   // Função para remover uma cotação do histórico
   const removerCotacao = (id: string) => {
@@ -28,6 +44,11 @@ const Historico = ({ historico, setHistorico }: HistoricoProps) => {
     if (cotacao) {
       setItemEditando(id);
       setCotacaoEmEdicao(JSON.parse(JSON.stringify(cotacao))); // Deep clone para evitar referências
+      
+      // Expand the item when editing
+      if (!expandedItems.includes(id)) {
+        setExpandedItems([...expandedItems, id]);
+      }
     }
   };
 
@@ -184,24 +205,44 @@ const Historico = ({ historico, setHistorico }: HistoricoProps) => {
             </p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {historico.map((item) => (
-              <HistoricoItem
-                key={item.id}
-                item={cotacaoEmEdicao && item.id === cotacaoEmEdicao.id ? cotacaoEmEdicao : item}
-                removerCotacao={removerCotacao}
-                editarCotacao={editarCotacao}
-                modoEdicao={itemEditando === item.id}
-                salvarEdicao={salvarEdicao}
-                cancelarEdicao={cancelarEdicao}
-                atualizarTransportadora={atualizarTransportadora}
-                atualizarStatus={(transportadoraIndex, status) => atualizarStatus(item.id, transportadoraIndex, status)}
-                atualizarCampo={atualizarCampo}
-                atualizarProduto={atualizarProduto}
-                adicionarProduto={adicionarProduto}
-                removerProduto={removerProduto}
-                atualizarPropostaFinal={(transportadoraIndex, proposta) => atualizarPropostaFinal(item.id, transportadoraIndex, proposta)}
-              />
+              <Collapsible 
+                key={item.id} 
+                open={expandedItems.includes(item.id)}
+                onOpenChange={() => toggleExpand(item.id)}
+                className="border rounded-md overflow-hidden"
+              >
+                <CollapsibleTrigger className="flex justify-between items-center w-full p-4 text-left hover:bg-muted/50 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <TruckIcon className="h-5 w-5 text-primary" />
+                    <div>
+                      <div className="font-medium">{item.cliente}</div>
+                      <div className="text-sm text-muted-foreground">
+                        {item.cidade} - {item.estado} • {item.data}
+                      </div>
+                    </div>
+                  </div>
+                  <ChevronDown className={`h-5 w-5 transition-transform ${expandedItems.includes(item.id) ? 'transform rotate-180' : ''}`} />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="border-t bg-muted/10">
+                  <HistoricoItem
+                    item={cotacaoEmEdicao && item.id === cotacaoEmEdicao.id ? cotacaoEmEdicao : item}
+                    removerCotacao={removerCotacao}
+                    editarCotacao={editarCotacao}
+                    modoEdicao={itemEditando === item.id}
+                    salvarEdicao={salvarEdicao}
+                    cancelarEdicao={cancelarEdicao}
+                    atualizarTransportadora={atualizarTransportadora}
+                    atualizarStatus={(transportadoraIndex, status) => atualizarStatus(item.id, transportadoraIndex, status)}
+                    atualizarCampo={atualizarCampo}
+                    atualizarProduto={atualizarProduto}
+                    adicionarProduto={adicionarProduto}
+                    removerProduto={removerProduto}
+                    atualizarPropostaFinal={(transportadoraIndex, proposta) => atualizarPropostaFinal(item.id, transportadoraIndex, proposta)}
+                  />
+                </CollapsibleContent>
+              </Collapsible>
             ))}
           </div>
         )}
