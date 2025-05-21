@@ -248,6 +248,8 @@ const Index = () => {
         estado={estado}
         cep={cep}
         fazenda={fazenda}
+        origem={origem}
+        destino={destino}
         produtos={produtos}
         observacoes={observacoes}
       />

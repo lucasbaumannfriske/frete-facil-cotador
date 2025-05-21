@@ -14,6 +14,8 @@ interface EmailPreviewProps {
   estado: string;
   cep: string;
   fazenda: string;
+  origem: string;
+  destino: string;
   produtos: Produto[];
   observacoes: string;
 }
@@ -25,8 +27,8 @@ const EmailPreview = ({
   endereco,
   cidade,
   estado,
-  cep,
-  fazenda,
+  origem,
+  destino,
   produtos,
   observacoes,
 }: EmailPreviewProps) => {
@@ -69,9 +71,8 @@ const EmailPreview = ({
                   <p><strong>Cidade:</strong> {cidade}</p>
                 </div>
                 <div>
-                  <p><strong>Estado:</strong> {estado}</p>
-                  <p><strong>CEP:</strong> {cep}</p>
-                  <p><strong>Fazenda:</strong> {fazenda || "N/A"}</p>
+                  <p><strong>Origem:</strong> {origem || "N/A"}</p>
+                  <p><strong>Destino:</strong> {destino || "N/A"}</p>
                 </div>
               </div>
             </CardContent>
@@ -135,7 +136,6 @@ const EmailPreview = ({
 
           <p className="my-4">Agradeço a atenção e aguardo a sua cotação.</p>
           <p>Atenciosamente,</p>
-          <p>[Seu Nome/Empresa]</p>
         </div>
         <div className="flex justify-end gap-2 mt-4">
           <Button onClick={copiarEmail} variant="outline">
