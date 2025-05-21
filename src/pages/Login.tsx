@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -96,15 +96,6 @@ const Login = () => {
                   </>
                 )}
               </Button>
-              
-              <div className="text-center text-sm">
-                <span className="text-muted-foreground">
-                  Não tem uma conta?{" "}
-                </span>
-                <Link to="/cadastro" className="text-primary hover:underline font-medium">
-                  Cadastre-se
-                </Link>
-              </div>
             </form>
           </CardContent>
         </Card>
