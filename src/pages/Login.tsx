@@ -26,9 +26,14 @@ const Login = () => {
     
     // Simular login - no futuro, isto seria substituído por uma conexão com backend/supabase
     setTimeout(() => {
-      // Checagem básica simulada - seria substituído por autenticação real
-      if (email === "admin@exemplo.com" && senha === "12345") {
-        localStorage.setItem("usuarioLogado", JSON.stringify({ email, nome: "Administrador" }));
+      // Checagem com usuários aceitos
+      if ((email === "admin@exemplo.com" && senha === "12345") || 
+          (email === "lucasfriske@agrofarm.net.br" && senha === "Nexus@4202")) {
+        
+        // Determina o nome baseado no email
+        const nome = email === "admin@exemplo.com" ? "Administrador" : "Lucas Friske";
+        
+        localStorage.setItem("usuarioLogado", JSON.stringify({ email, nome }));
         toast.success("Login realizado com sucesso!");
         navigate("/");
       } else {

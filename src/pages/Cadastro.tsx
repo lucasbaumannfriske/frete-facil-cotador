@@ -34,6 +34,13 @@ const Cadastro = () => {
       return;
     }
 
+    // Verifica se é o email pré-cadastrado
+    if (email === "lucasfriske@agrofarm.net.br") {
+      toast.error("Este email já está cadastrado. Por favor, faça login.");
+      navigate("/login");
+      return;
+    }
+
     setLoading(true);
     
     // Simular cadastro - no futuro, isto seria substituído por uma conexão com backend/supabase

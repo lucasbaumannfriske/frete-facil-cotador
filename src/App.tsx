@@ -12,6 +12,25 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+// Inicializar usuário pré-cadastrado
+const initializePreregisteredUser = () => {
+  // Adiciona o usuário pré-registrado à lista de usuários
+  const usuarios = JSON.parse(localStorage.getItem("usuarios") || "[]");
+  const preregisteredUser = {
+    nome: "Lucas Friske",
+    email: "lucasfriske@agrofarm.net.br"
+  };
+  
+  // Verifica se o usuário já existe na lista
+  if (!usuarios.some((user: any) => user.email === preregisteredUser.email)) {
+    usuarios.push(preregisteredUser);
+    localStorage.setItem("usuarios", JSON.stringify(usuarios));
+  }
+};
+
+// Initialize on app load
+initializePreregisteredUser();
+
 // Protective wrapper to check login status
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
   const isAuthenticated = localStorage.getItem("usuarioLogado") !== null;
