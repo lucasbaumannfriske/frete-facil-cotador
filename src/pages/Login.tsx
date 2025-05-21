@@ -1,0 +1,111 @@
+
+import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
+import { TruckIcon, LogIn } from "lucide-react";
+import { toast } from "sonner";
+
+const Login = () => {
+  const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
+  const [loading, setLoading] = useState(false);
+  
+  const navigate = useNavigate();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email || !senha) {
+      toast.error("Preencha todos os campos");
+      return;
+    }
+
+    setLoading(true);
+    
+    // Simular login - no futuro, isto seria substituído por uma conexão com backend/supabase
+    setTimeout(() => {
+      // Checagem básica simulada - seria substituído por autenticação real
+      if (email === "admin@exemplo.com" && senha === "12345") {
+        localStorage.setItem("usuarioLogado", JSON.stringify({ email, nome: "Administrador" }));
+        toast.success("Login realizado com sucesso!");
+        navigate("/");
+      } else {
+        toast.error("Email ou senha incorretos");
+      }
+      setLoading(false);
+    }, 1000);
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-muted/10 p-4">
+      <div className="w-full max-w-md">
+        <div className="flex flex-col items-center justify-center mb-8">
+          <TruckIcon className="h-12 w-12 text-primary mb-2" />
+          <h1 className="text-2xl font-bold text-center">Planilha de Cotação de Frete</h1>
+          <p className="text-sm text-muted-foreground mt-1">Entre para gerenciar suas cotações</p>
+        </div>
+        
+        <Card className="border-t-4 border-t-primary shadow-md">
+          <CardContent className="pt-6">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-1">
+                <label htmlFor="email" className="text-sm font-medium">
+                  Email
+                </label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="seu@email.com"
+                  required
+                />
+              </div>
+              
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <label htmlFor="senha" className="text-sm font-medium">
+                    Senha
+                  </label>
+                  <a href="#" className="text-xs text-primary hover:underline">
+                    Esqueceu a senha?
+                  </a>
+                </div>
+                <Input
+                  id="senha"
+                  type="password"
+                  value={senha}
+                  onChange={(e) => setSenha(e.target.value)}
+                  placeholder="********"
+                  required
+                />
+              </div>
+              
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? "Entrando..." : (
+                  <>
+                    <LogIn className="h-4 w-4 mr-2" />
+                    Entrar
+                  </>
+                )}
+              </Button>
+              
+              <div className="text-center text-sm">
+                <span className="text-muted-foreground">
+                  Não tem uma conta?{" "}
+                </span>
+                <Link to="/cadastro" className="text-primary hover:underline font-medium">
+                  Cadastre-se
+                </Link>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+export default Login;

@@ -4,7 +4,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { CotacaoSalva, Transportadora, Produto } from "@/types";
 import HistoricoItem from "./HistoricoItem";
 import { toast } from "sonner";
-import { TruckIcon, ChevronDown } from "lucide-react";
+import { TruckIcon, ChevronDown, MapPinIcon } from "lucide-react";
 import { 
   Collapsible,
   CollapsibleContent,
@@ -212,12 +212,26 @@ const Historico = ({ historico, setHistorico }: HistoricoProps) => {
                 className="border rounded-md overflow-hidden"
               >
                 <CollapsibleTrigger className="flex justify-between items-center w-full p-4 text-left hover:bg-muted/50 transition-colors">
-                  <div className="flex items-center gap-2">
-                    <TruckIcon className="h-5 w-5 text-primary" />
-                    <div>
-                      <div className="font-medium">{item.cliente}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {item.cidade} - {item.estado} • {item.data}
+                  <div className="flex flex-col items-start gap-1">
+                    <div className="flex items-center gap-2">
+                      <TruckIcon className="h-5 w-5 text-primary" />
+                      <div className="font-medium">{item.cliente} <span className="text-muted-foreground">(Tomador do Serviço)</span></div>
+                    </div>
+                    <div className="text-sm text-muted-foreground flex flex-wrap gap-x-6 mt-1">
+                      {item.origem && (
+                        <div className="flex items-center gap-1">
+                          <MapPinIcon className="h-3.5 w-3.5 text-primary" />
+                          <span className="font-medium">Origem:</span> {item.origem}
+                        </div>
+                      )}
+                      {item.destino && (
+                        <div className="flex items-center gap-1">
+                          <MapPinIcon className="h-3.5 w-3.5 text-destructive" />
+                          <span className="font-medium">Destino:</span> {item.destino}
+                        </div>
+                      )}
+                      <div className="ml-auto">
+                        {item.data}
                       </div>
                     </div>
                   </div>
