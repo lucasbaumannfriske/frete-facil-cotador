@@ -12,6 +12,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { PackageIcon, TruckIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import Navigation from "@/components/Navigation";
 
 const Index = () => {
   // Estado para informações do cliente/tomador
@@ -163,96 +164,99 @@ const Index = () => {
   };
 
   return (
-    <div className="container max-w-6xl py-8">
-      <div className="flex items-center justify-center gap-3 mb-6">
-        <TruckIcon className="h-8 w-8 text-primary" />
-        <h1 className="text-3xl font-bold text-center">Planilha de Cotação de Frete</h1>
+    <div>
+      <Navigation />
+      <div className="container max-w-6xl py-8">
+        <div className="flex items-center justify-center gap-3 mb-6">
+          <TruckIcon className="h-8 w-8 text-primary" />
+          <h1 className="text-3xl font-bold text-center">Planilha de Cotação de Frete</h1>
+        </div>
+
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsTrigger value="nova-cotacao" className="text-base">Nova Cotação</TabsTrigger>
+            <TabsTrigger value="historico" className="text-base">Histórico de Cotações</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="nova-cotacao">
+            <Card className="border-t-4 border-t-primary shadow-md">
+              <CardContent className="p-6 space-y-8">
+                <div className="flex items-center gap-2 pb-2 mb-4 border-b">
+                  <PackageIcon className="h-5 w-5 text-primary" />
+                  <h2 className="text-xl font-semibold">Nova Cotação</h2>
+                </div>
+                
+                <ClienteForm
+                  cliente={cliente}
+                  setCliente={setCliente}
+                  cidade={cidade}
+                  setCidade={setCidade}
+                  origem={origem}
+                  setOrigem={setOrigem}
+                  destino={destino}
+                  setDestino={setDestino}
+                  roteiro={roteiro}
+                  setRoteiro={setRoteiro}
+                  endereco={endereco}
+                  setEndereco={setEndereco}
+                  estado={estado}
+                  setEstado={setEstado}
+                  cep={cep}
+                  setCep={setCep}
+                  fazenda={fazenda}
+                  setFazenda={setFazenda}
+                />
+
+                <ProdutosTable
+                  produtos={produtos}
+                  setProdutos={setProdutos}
+                  atualizarTotais={atualizarTotais}
+                />
+
+                <TransportadorasTable
+                  transportadoras={transportadoras}
+                  setTransportadoras={setTransportadoras}
+                  calcularTotal={calcularTotal}
+                />
+
+                <Observacoes
+                  observacoes={observacoes}
+                  setObservacoes={setObservacoes}
+                />
+
+                <ActionButtons
+                  salvarCotacao={salvarCotacao}
+                  exportarEmail={exportarEmail}
+                  limparFormulario={limparFormulario}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="historico" className="mt-0">
+            <Card className="border-t-4 border-t-primary shadow-md">
+              <CardContent className="p-6">
+                <Historico historico={historico} setHistorico={setHistorico} />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+
+        <EmailPreview
+          open={emailAberto}
+          setOpen={setEmailAberto}
+          cliente={cliente}
+          endereco={endereco}
+          cidade={cidade}
+          estado={estado}
+          cep={cep}
+          fazenda={fazenda}
+          origem={origem}
+          destino={destino}
+          produtos={produtos}
+          observacoes={observacoes}
+        />
       </div>
-
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-6">
-          <TabsTrigger value="nova-cotacao" className="text-base">Nova Cotação</TabsTrigger>
-          <TabsTrigger value="historico" className="text-base">Histórico de Cotações</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="nova-cotacao">
-          <Card className="border-t-4 border-t-primary shadow-md">
-            <CardContent className="p-6 space-y-8">
-              <div className="flex items-center gap-2 pb-2 mb-4 border-b">
-                <PackageIcon className="h-5 w-5 text-primary" />
-                <h2 className="text-xl font-semibold">Nova Cotação</h2>
-              </div>
-              
-              <ClienteForm
-                cliente={cliente}
-                setCliente={setCliente}
-                cidade={cidade}
-                setCidade={setCidade}
-                origem={origem}
-                setOrigem={setOrigem}
-                destino={destino}
-                setDestino={setDestino}
-                roteiro={roteiro}
-                setRoteiro={setRoteiro}
-                endereco={endereco}
-                setEndereco={setEndereco}
-                estado={estado}
-                setEstado={setEstado}
-                cep={cep}
-                setCep={setCep}
-                fazenda={fazenda}
-                setFazenda={setFazenda}
-              />
-
-              <ProdutosTable
-                produtos={produtos}
-                setProdutos={setProdutos}
-                atualizarTotais={atualizarTotais}
-              />
-
-              <TransportadorasTable
-                transportadoras={transportadoras}
-                setTransportadoras={setTransportadoras}
-                calcularTotal={calcularTotal}
-              />
-
-              <Observacoes
-                observacoes={observacoes}
-                setObservacoes={setObservacoes}
-              />
-
-              <ActionButtons
-                salvarCotacao={salvarCotacao}
-                exportarEmail={exportarEmail}
-                limparFormulario={limparFormulario}
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="historico" className="mt-0">
-          <Card className="border-t-4 border-t-primary shadow-md">
-            <CardContent className="p-6">
-              <Historico historico={historico} setHistorico={setHistorico} />
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
-      <EmailPreview
-        open={emailAberto}
-        setOpen={setEmailAberto}
-        cliente={cliente}
-        endereco={endereco}
-        cidade={cidade}
-        estado={estado}
-        cep={cep}
-        fazenda={fazenda}
-        origem={origem}
-        destino={destino}
-        produtos={produtos}
-        observacoes={observacoes}
-      />
     </div>
   );
 };
