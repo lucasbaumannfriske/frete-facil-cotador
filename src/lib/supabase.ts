@@ -1,12 +1,32 @@
 
 import { createClient } from '@supabase/supabase-js'
 
-// Using Lovable's native Supabase integration
-// The environment variables are handled automatically by Lovable
-const supabaseUrl = 'https://your-project.supabase.co'
+// Credenciais do Supabase - você precisa substituir pelas suas credenciais reais
+const supabaseUrl = 'https://your-project-id.supabase.co'
 const supabaseKey = 'your-anon-key'
 
 export const supabase = createClient(supabaseUrl, supabaseKey)
+
+// Função para fazer login automático do usuário Lucas
+export const loginUsuarioLucas = async () => {
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: 'lucasfriske@agrofarm.net.br',
+      password: 'Nexus@4202'
+    })
+    
+    if (error) {
+      console.error('Erro no login:', error)
+      return false
+    }
+    
+    console.log('Login realizado com sucesso:', data)
+    return true
+  } catch (error) {
+    console.error('Erro no login:', error)
+    return false
+  }
+}
 
 // Tipos para o banco de dados
 export type Database = {
