@@ -9,45 +9,54 @@ export const useCotacoes = () => {
   const [loading, setLoading] = useState(true)
   const [authenticated, setAuthenticated] = useState(false)
 
-  // Verificar e fazer login automático
+  // Verificar autenticação
   const verificarAutenticacao = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser()
+      const { data: { user }, error } = await supabase.auth.getUser()
+      
+      if (error) {
+        console.error('Erro ao verificar usuário:', error)
+        return false
+      }
       
       if (!user) {
-        console.log('Usuário não autenticado, fazendo login automático...')
-        const loginSuccess = await loginUsuarioLucas()
-        
-        if (loginSuccess) {
+        console.log('Usuário não autenticado, fazendo login...')
+        try {
+          await loginUsuarioLucas()
           setAuthenticated(true)
-          console.log('Login automático realizado com sucesso')
-        } else {
-          console.error('Falha no login automático')
-          toast.error('Erro na autenticação')
+          return true
+        } catch (loginError) {
+          console.error('Erro no login:', loginError)
           setAuthenticated(false)
+          return false
         }
       } else {
-        console.log('Usuário já autenticado:', user.email)
+        console.log('Usuário autenticado:', user.email)
         setAuthenticated(true)
+        return true
       }
     } catch (error) {
       console.error('Erro na verificação de autenticação:', error)
       setAuthenticated(false)
+      return false
     }
   }
 
-  // Carregar cotações do Supabase
+  // Carregar cotações
   const carregarCotacoes = async () => {
     try {
       setLoading(true)
       
       // Verificar autenticação primeiro
-      if (!authenticated) {
-        await verificarAutenticacao()
+      const isAuth = await verificarAutenticacao()
+      if (!isAuth) {
+        console.log('Não foi possível autenticar')
+        return
       }
       
-      // Buscar cotações com produtos e transportadoras
-      const { data: cotacoesData, error: cotacoesError } = await supabase
+      console.log('Carregando cotações...')
+      
+      const { data: cotacoesData, error } = await supabase
         .from('cotacoes')
         .select(`
           *,
@@ -56,15 +65,15 @@ export const useCotacoes = () => {
         `)
         .order('created_at', { ascending: false })
 
-      if (cotacoesError) {
-        console.error('Erro ao carregar cotações:', cotacoesError)
-        toast.error('Erro ao carregar cotações: ' + cotacoesError.message)
+      if (error) {
+        console.error('Erro ao carregar cotações:', error)
+        toast.error('Erro ao carregar cotações: ' + error.message)
         return
       }
 
       console.log('Cotações carregadas:', cotacoesData)
 
-      // Transformar dados do Supabase para o formato do frontend
+      // Transformar dados
       const cotacoesFormatadas: CotacaoSalva[] = cotacoesData?.map(cotacao => ({
         id: cotacao.id,
         cliente: cotacao.cliente,
@@ -98,32 +107,24 @@ export const useCotacoes = () => {
       setCotacoes(cotacoesFormatadas)
       toast.success(`${cotacoesFormatadas.length} cotações carregadas`)
     } catch (error) {
-      console.error('Erro ao carregar cotações:', error)
+      console.error('Erro inesperado:', error)
       toast.error('Erro inesperado ao carregar cotações')
     } finally {
       setLoading(false)
     }
   }
 
-  // Salvar nova cotação
+  // Salvar cotação
   const salvarCotacao = async (novaCotacao: Omit<CotacaoSalva, 'id'>) => {
     try {
-      console.log('Iniciando salvamento da cotação...')
+      console.log('Salvando cotação...')
       
-      // Verificar autenticação
       const { data: { user } } = await supabase.auth.getUser()
       
       if (!user) {
-        console.log('Usuário não autenticado, tentando login automático...')
-        const loginSuccess = await loginUsuarioLucas()
-        
-        if (!loginSuccess) {
-          toast.error('Erro na autenticação')
-          return false
-        }
+        toast.error('Usuário não autenticado')
+        return false
       }
-
-      console.log('Usuário autenticado, salvando cotação...')
 
       // Inserir cotação
       const { data: cotacaoData, error: cotacaoError } = await supabase
@@ -140,7 +141,7 @@ export const useCotacoes = () => {
           destino: novaCotacao.destino,
           roteiro: novaCotacao.roteiro,
           observacoes: novaCotacao.observacoes,
-          user_id: user?.id
+          user_id: user.id
         })
         .select()
         .single()
@@ -151,69 +152,63 @@ export const useCotacoes = () => {
         return false
       }
 
-      console.log('Cotação salva:', cotacaoData)
-
       // Inserir produtos
       if (novaCotacao.produtos.length > 0) {
-        const produtosParaInserir = novaCotacao.produtos.map(produto => ({
-          nome: produto.nome,
-          quantidade: produto.quantidade,
-          peso: produto.peso,
-          cotacao_id: cotacaoData.id
-        }))
-
         const { error: produtosError } = await supabase
           .from('produtos')
-          .insert(produtosParaInserir)
+          .insert(
+            novaCotacao.produtos.map(produto => ({
+              nome: produto.nome,
+              quantidade: produto.quantidade,
+              peso: produto.peso,
+              cotacao_id: cotacaoData.id
+            }))
+          )
 
         if (produtosError) {
           console.error('Erro ao salvar produtos:', produtosError)
           toast.error('Erro ao salvar produtos: ' + produtosError.message)
           return false
         }
-        console.log('Produtos salvos com sucesso')
       }
 
       // Inserir transportadoras
       if (novaCotacao.transportadoras.length > 0) {
-        const transportadorasParaInserir = novaCotacao.transportadoras.map(transportadora => ({
-          nome: transportadora.nome,
-          prazo: transportadora.prazo,
-          valor_unitario: transportadora.valorUnitario,
-          valor_total: transportadora.valorTotal,
-          status: transportadora.status,
-          proposta_final: transportadora.propostaFinal,
-          cotacao_id: cotacaoData.id,
-          user_id: user?.id
-        }))
-
         const { error: transportadorasError } = await supabase
           .from('transportadoras')
-          .insert(transportadorasParaInserir)
+          .insert(
+            novaCotacao.transportadoras.map(transportadora => ({
+              nome: transportadora.nome,
+              prazo: transportadora.prazo,
+              valor_unitario: transportadora.valorUnitario,
+              valor_total: transportadora.valorTotal,
+              status: transportadora.status,
+              proposta_final: transportadora.propostaFinal,
+              cotacao_id: cotacaoData.id,
+              user_id: user.id
+            }))
+          )
 
         if (transportadorasError) {
           console.error('Erro ao salvar transportadoras:', transportadorasError)
           toast.error('Erro ao salvar transportadoras: ' + transportadorasError.message)
           return false
         }
-        console.log('Transportadoras salvas com sucesso')
       }
 
-      toast.success('Cotação salva com sucesso no Supabase!')
-      await carregarCotacoes() // Recarregar a lista
+      toast.success('Cotação salva com sucesso!')
+      await carregarCotacoes()
       return true
     } catch (error) {
-      console.error('Erro inesperado ao salvar cotação:', error)
+      console.error('Erro ao salvar cotação:', error)
       toast.error('Erro inesperado ao salvar cotação')
       return false
     }
   }
 
-  // Atualizar cotação existente
+  // Atualizar cotação
   const atualizarCotacao = async (cotacaoAtualizada: CotacaoSalva) => {
     try {
-      console.log('Atualizando cotação:', cotacaoAtualizada.id)
-      
       // Atualizar cotação principal
       const { error: cotacaoError } = await supabase
         .from('cotacoes')
@@ -237,41 +232,41 @@ export const useCotacoes = () => {
         return false
       }
 
-      // Deletar produtos e transportadoras existentes
+      // Deletar e recriar produtos e transportadoras
       await supabase.from('produtos').delete().eq('cotacao_id', cotacaoAtualizada.id)
       await supabase.from('transportadoras').delete().eq('cotacao_id', cotacaoAtualizada.id)
 
-      // Inserir produtos atualizados
+      // Reinserir produtos
       if (cotacaoAtualizada.produtos.length > 0) {
-        const produtosParaInserir = cotacaoAtualizada.produtos.map(produto => ({
-          nome: produto.nome,
-          quantidade: produto.quantidade,
-          peso: produto.peso,
-          cotacao_id: cotacaoAtualizada.id
-        }))
-
-        await supabase.from('produtos').insert(produtosParaInserir)
+        await supabase.from('produtos').insert(
+          cotacaoAtualizada.produtos.map(produto => ({
+            nome: produto.nome,
+            quantidade: produto.quantidade,
+            peso: produto.peso,
+            cotacao_id: cotacaoAtualizada.id
+          }))
+        )
       }
 
-      // Inserir transportadoras atualizadas
+      // Reinserir transportadoras
       if (cotacaoAtualizada.transportadoras.length > 0) {
         const { data: { user } } = await supabase.auth.getUser()
-        const transportadorasParaInserir = cotacaoAtualizada.transportadoras.map(transportadora => ({
-          nome: transportadora.nome,
-          prazo: transportadora.prazo,
-          valor_unitario: transportadora.valorUnitario,
-          valor_total: transportadora.valorTotal,
-          status: transportadora.status,
-          proposta_final: transportadora.propostaFinal,
-          cotacao_id: cotacaoAtualizada.id,
-          user_id: user?.id
-        }))
-
-        await supabase.from('transportadoras').insert(transportadorasParaInserir)
+        await supabase.from('transportadoras').insert(
+          cotacaoAtualizada.transportadoras.map(transportadora => ({
+            nome: transportadora.nome,
+            prazo: transportadora.prazo,
+            valor_unitario: transportadora.valorUnitario,
+            valor_total: transportadora.valorTotal,
+            status: transportadora.status,
+            proposta_final: transportadora.propostaFinal,
+            cotacao_id: cotacaoAtualizada.id,
+            user_id: user?.id
+          }))
+        )
       }
 
       toast.success('Cotação atualizada com sucesso!')
-      await carregarCotacoes() // Recarregar a lista
+      await carregarCotacoes()
       return true
     } catch (error) {
       console.error('Erro ao atualizar cotação:', error)
@@ -283,8 +278,6 @@ export const useCotacoes = () => {
   // Deletar cotação
   const deletarCotacao = async (id: string) => {
     try {
-      console.log('Deletando cotação:', id)
-      
       const { error } = await supabase
         .from('cotacoes')
         .delete()
@@ -297,7 +290,7 @@ export const useCotacoes = () => {
       }
 
       toast.success('Cotação removida com sucesso!')
-      await carregarCotacoes() // Recarregar a lista
+      await carregarCotacoes()
       return true
     } catch (error) {
       console.error('Erro ao deletar cotação:', error)
@@ -307,9 +300,7 @@ export const useCotacoes = () => {
   }
 
   useEffect(() => {
-    verificarAutenticacao().then(() => {
-      carregarCotacoes()
-    })
+    carregarCotacoes()
   }, [])
 
   return {
