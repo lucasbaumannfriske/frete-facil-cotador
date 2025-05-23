@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import ClienteForm from "@/components/ClienteForm";
 import ProdutosTable from "@/components/ProdutosTable";
 import TransportadorasTable from "@/components/TransportadorasTable";
@@ -7,14 +7,18 @@ import Observacoes from "@/components/Observacoes";
 import ActionButtons from "@/components/ActionButtons";
 import EmailPreview from "@/components/EmailPreview";
 import Historico from "@/components/Historico";
-import { CotacaoSalva, Produto, Transportadora } from "@/types";
+import { Produto, Transportadora } from "@/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { PackageIcon, TruckIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Navigation from "@/components/Navigation";
+import { useCotacoes } from "@/hooks/useCotacoes";
 
 const Index = () => {
+  // Hook para gerenciar cotações no Supabase
+  const { cotacoes, loading, salvarCotacao: salvarCotacaoSupabase } = useCotacoes();
+
   // Estado para informações do cliente/tomador
   const [cliente, setCliente] = useState("");
   const [cidade, setCidade] = useState("");
@@ -39,26 +43,11 @@ const Index = () => {
     { id: "1", nome: "", prazo: "", valorUnitario: "", valorTotal: "", status: "Pendente", propostaFinal: "" },
   ]);
 
-  // Estado para histórico e preview de email
-  const [historico, setHistorico] = useState<CotacaoSalva[]>([]);
+  // Estado para preview de email
   const [emailAberto, setEmailAberto] = useState(false);
   
   // Estado para controlar a guia ativa
   const [activeTab, setActiveTab] = useState("nova-cotacao");
-
-  // Carregar histórico salvo ao iniciar
-  useEffect(() => {
-    const historicoSalvo = localStorage.getItem("cotacoes");
-    if (historicoSalvo) {
-      try {
-        const cotacoesParsed = JSON.parse(historicoSalvo);
-        setHistorico(cotacoesParsed);
-      } catch (error) {
-        console.error("Erro ao carregar histórico:", error);
-        localStorage.removeItem("cotacoes");
-      }
-    }
-  }, []);
 
   // Função para calcular o total de cada transportadora
   const calcularTotal = (id: string, valorUnitarioStr: string) => {
@@ -90,8 +79,8 @@ const Index = () => {
     });
   };
 
-  // Salvar cotação no histórico
-  const salvarCotacao = () => {
+  // Salvar cotação no Supabase
+  const salvarCotacao = async () => {
     if (!cliente) {
       toast.error("Por favor, informe o nome do cliente");
       return;
@@ -111,8 +100,7 @@ const Index = () => {
       return;
     }
 
-    const novaCotacao: CotacaoSalva = {
-      id: "cotacao-" + Date.now().toString(),
+    const novaCotacao = {
       cliente,
       fazenda,
       data: new Date().toLocaleDateString(),
@@ -128,10 +116,12 @@ const Index = () => {
       observacoes,
     };
 
-    const novoHistorico = [novaCotacao, ...historico];
-    setHistorico(novoHistorico);
-    localStorage.setItem("cotacoes", JSON.stringify(novoHistorico));
-    toast.success("Cotação salva com sucesso!");
+    const sucesso = await salvarCotacaoSupabase(novaCotacao);
+    
+    if (sucesso) {
+      // Limpar formulário após salvar com sucesso
+      limparFormulario();
+    }
   };
 
   // Limpar formulário para nova cotação
@@ -236,7 +226,11 @@ const Index = () => {
           <TabsContent value="historico" className="mt-0">
             <Card className="border-t-4 border-t-primary shadow-md">
               <CardContent className="p-6">
-                <Historico historico={historico} setHistorico={setHistorico} />
+                <Historico 
+                  historico={cotacoes} 
+                  setHistorico={() => {}} // Não usado mais pois é gerenciado pelo hook
+                  loading={loading}
+                />
               </CardContent>
             </Card>
           </TabsContent>

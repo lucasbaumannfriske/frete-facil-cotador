@@ -12,13 +12,16 @@ import {
   CollapsibleTrigger 
 } from "@/components/ui/collapsible";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useCotacoes } from "@/hooks/useCotacoes";
 
 interface HistoricoProps {
   historico: CotacaoSalva[];
   setHistorico: (historico: CotacaoSalva[]) => void;
+  loading?: boolean;
 }
 
-const Historico = ({ historico, setHistorico }: HistoricoProps) => {
+const Historico = ({ historico, loading = false }: HistoricoProps) => {
+  const { atualizarCotacao, deletarCotacao } = useCotacoes();
   const [itemEditando, setItemEditando] = useState<string | null>(null);
   const [cotacaoEmEdicao, setCotacaoEmEdicao] = useState<CotacaoSalva | null>(null);
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
@@ -34,11 +37,11 @@ const Historico = ({ historico, setHistorico }: HistoricoProps) => {
   };
 
   // Função para remover uma cotação do histórico
-  const removerCotacao = (id: string) => {
-    const novoCotacoes = historico.filter((item) => item.id !== id);
-    setHistorico(novoCotacoes);
-    localStorage.setItem("cotacoes", JSON.stringify(novoCotacoes));
-    toast.success("Cotação removida com sucesso!");
+  const removerCotacao = async (id: string) => {
+    const sucesso = await deletarCotacao(id);
+    if (sucesso) {
+      setExpandedItems(prev => prev.filter(item => item !== id));
+    }
   };
 
   // Função para iniciar a edição de uma cotação
@@ -56,18 +59,15 @@ const Historico = ({ historico, setHistorico }: HistoricoProps) => {
   };
 
   // Função para salvar as edições feitas em uma cotação
-  const salvarEdicao = () => {
+  const salvarEdicao = async () => {
     if (!cotacaoEmEdicao) return;
 
-    const novoCotacoes = historico.map((item) =>
-      item.id === cotacaoEmEdicao.id ? cotacaoEmEdicao : item
-    );
-
-    setHistorico(novoCotacoes);
-    localStorage.setItem("cotacoes", JSON.stringify(novoCotacoes));
-    setItemEditando(null);
-    setCotacaoEmEdicao(null);
-    toast.success("Cotação atualizada com sucesso!");
+    const sucesso = await atualizarCotacao(cotacaoEmEdicao);
+    
+    if (sucesso) {
+      setItemEditando(null);
+      setCotacaoEmEdicao(null);
+    }
   };
 
   // Função para cancelar a edição
@@ -168,24 +168,37 @@ const Historico = ({ historico, setHistorico }: HistoricoProps) => {
   };
   
   // Função para atualizar a proposta final de uma transportadora
-  const atualizarPropostaFinal = (transportadoraIndex: number, propostaFinal: string) => {
-    // Atualiza diretamente na lista de histórico sem entrar em modo de edição
-    const novoCotacoes = historico.map(item => {
-      if (item.id === itemEditando || (cotacaoEmEdicao && item.id === cotacaoEmEdicao.id)) {
-        const novasTransportadoras = [...item.transportadoras];
-        novasTransportadoras[transportadoraIndex] = {
-          ...novasTransportadoras[transportadoraIndex],
-          propostaFinal: propostaFinal
-        };
-        return {...item, transportadoras: novasTransportadoras};
-      }
-      return item;
-    });
+  const atualizarPropostaFinal = async (transportadoraIndex: number, propostaFinal: string) => {
+    if (!cotacaoEmEdicao) return;
+
+    const novasTransportadoras = [...cotacaoEmEdicao.transportadoras];
+    novasTransportadoras[transportadoraIndex] = {
+      ...novasTransportadoras[transportadoraIndex],
+      propostaFinal: propostaFinal
+    };
+
+    const cotacaoAtualizada = {
+      ...cotacaoEmEdicao,
+      transportadoras: novasTransportadoras
+    };
+
+    const sucesso = await atualizarCotacao(cotacaoAtualizada);
     
-    setHistorico(novoCotacoes);
-    localStorage.setItem("cotacoes", JSON.stringify(novoCotacoes));
-    toast.success("Proposta final atualizada com sucesso!");
+    if (sucesso) {
+      setCotacaoEmEdicao(cotacaoAtualizada);
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <TruckIcon className="h-12 w-12 text-muted-foreground mx-auto mb-3 opacity-50 animate-pulse" />
+          <p className="text-muted-foreground">Carregando cotações...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
