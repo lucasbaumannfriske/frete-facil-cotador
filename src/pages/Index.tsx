@@ -103,7 +103,7 @@ const Index = () => {
     const novaCotacao = {
       cliente,
       fazenda,
-      data: new Date().toLocaleDateString(),
+      data: new Date().toISOString().split('T')[0], // Gera data no formato YYYY-MM-DD
       endereco,
       cidade,
       estado,
