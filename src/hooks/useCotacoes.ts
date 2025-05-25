@@ -140,6 +140,8 @@ export const useCotacoes = () => {
         // Mantém a data original se a formatação falhar
       }
 
+      console.log("Enviando data para Supabase:", dataFormatada); // Log para depuração
+
       // Inserir cotação
       const { data: cotacaoData, error: cotacaoError } = await supabase
         .from('cotacoes')
