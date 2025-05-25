@@ -120,10 +120,24 @@ export const useCotacoes = () => {
       console.log('Salvando cotação...')
       
       const { data: { user } } = await supabase.auth.getUser()
-      
-      if (!user) {
-        toast.error('Usuário não autenticado')
+           if (!user) {
+        toast.error(\'Usuário não autenticado\')
         return false
+      }
+
+      // Formatar a data de DD/MM/AAAA para YYYY-MM-DD
+      let dataFormatada = novaCotacao.data;
+      try {
+        const partesData = novaCotacao.data.split('/');
+        if (partesData.length === 3) {
+          dataFormatada = `${partesData[2]}-${partesData[1]}-${partesData[0]}`;
+        } else {
+          // Se o formato já for ISO ou inválido, tenta usar como está ou loga um aviso
+          console.warn('Formato de data inesperado:', novaCotacao.data);
+        }
+      } catch (e) {
+        console.error('Erro ao formatar data:', e);
+        // Mantém a data original se a formatação falhar
       }
 
       // Inserir cotação
@@ -132,7 +146,7 @@ export const useCotacoes = () => {
         .insert({
           cliente: novaCotacao.cliente,
           fazenda: novaCotacao.fazenda,
-          data: novaCotacao.data,
+          data: dataFormatada, // Formatada para YYYY-MM-DD
           endereco: novaCotacao.endereco,
           cidade: novaCotacao.cidade,
           estado: novaCotacao.estado,
