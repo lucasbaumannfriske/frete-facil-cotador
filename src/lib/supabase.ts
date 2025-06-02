@@ -1,34 +1,23 @@
 
 import { createClient } from '@supabase/supabase-js'
 
-// Using Lovable's Supabase integration - these will be automatically populated
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://your-project-id.supabase.co'
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'your-anon-key'
+// Configuração do Supabase usando as variáveis de ambiente
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
 
-export const supabase = createClient(supabaseUrl, supabaseKey)
-
-// Função para fazer login automático do usuário Lucas
-export const loginUsuarioLucas = async () => {
-  try {
-    console.log('Tentando fazer login automático...')
-    
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: 'lucasfriske@agrofarm.net.br',
-      password: 'Nexus@4202'
-    })
-    
-    if (error) {
-      console.error('Erro no login:', error)
-      throw error
-    }
-    
-    console.log('Login realizado com sucesso:', data.user?.email)
-    return true
-  } catch (error) {
-    console.error('Erro no login:', error)
-    throw error
-  }
+// Verificar se as variáveis estão definidas
+if (!supabaseUrl || !supabaseKey) {
+  console.error('Variáveis de ambiente do Supabase não encontradas')
+  console.log('VITE_SUPABASE_URL:', supabaseUrl)
+  console.log('VITE_SUPABASE_ANON_KEY:', supabaseKey ? 'Definida' : 'Não definida')
 }
+
+export const supabase = createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+  }
+})
 
 // Tipos para o banco de dados
 export type Database = {
