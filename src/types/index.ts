@@ -4,6 +4,7 @@ export interface Produto {
   nome: string;
   quantidade: number;
   peso: string;
+  embalagem: string;
 }
 
 export interface Transportadora {

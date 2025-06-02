@@ -89,6 +89,7 @@ const EmailPreview = ({
                     <th className="text-left py-2">Produto</th>
                     <th className="text-left py-2">Quantidade</th>
                     <th className="text-left py-2">Peso (kg)</th>
+                    <th className="text-left py-2">Embalagem</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -97,6 +98,7 @@ const EmailPreview = ({
                       <td className="py-2">{produto.nome}</td>
                       <td className="py-2">{produto.quantidade}</td>
                       <td className="py-2">{produto.peso || "N/A"}</td>
+                      <td className="py-2">{produto.embalagem || "N/A"}</td>
                     </tr>
                   ))}
                 </tbody>

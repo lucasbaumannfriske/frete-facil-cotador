@@ -1,17 +1,13 @@
-
 import { useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CotacaoSalva, Transportadora, Produto } from "@/types";
 import HistoricoItem from "./HistoricoItem";
-import GerenciadorUsuarios from "./GerenciadorUsuarios";
-import { toast } from "sonner";
-import { TruckIcon, ChevronDown, MapPinIcon, User } from "lucide-react";
+import { TruckIcon, ChevronDown, MapPinIcon } from "lucide-react";
 import { 
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger 
 } from "@/components/ui/collapsible";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCotacoes } from "@/hooks/useCotacoes";
 
 interface HistoricoProps {
@@ -25,7 +21,6 @@ const Historico = ({ historico, loading = false }: HistoricoProps) => {
   const [itemEditando, setItemEditando] = useState<string | null>(null);
   const [cotacaoEmEdicao, setCotacaoEmEdicao] = useState<CotacaoSalva | null>(null);
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
-  const [activeTab, setActiveTab] = useState("cotacoes");
 
   // Toggle the expanded/collapsed state of an item
   const toggleExpand = (id: string) => {
@@ -134,7 +129,7 @@ const Historico = ({ historico, loading = false }: HistoricoProps) => {
       ...cotacaoEmEdicao,
       produtos: [
         ...cotacaoEmEdicao.produtos,
-        { id: Date.now().toString(), nome: "", quantidade: 1, peso: "" }
+        { id: Date.now().toString(), nome: "", quantidade: 1, peso: "", embalagem: "" }
       ]
     });
   };
@@ -202,98 +197,79 @@ const Historico = ({ historico, loading = false }: HistoricoProps) => {
 
   return (
     <div>
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mb-6">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="cotacoes" className="flex items-center gap-2">
-            <TruckIcon className="h-4 w-4" />
-            <span>Histórico de Cotações</span>
-          </TabsTrigger>
-          <TabsTrigger value="usuarios" className="flex items-center gap-2">
-            <User className="h-4 w-4" />
-            <span>Gerenciar Usuários</span>
-          </TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="cotacoes" className="mt-4">
-          <div className="flex items-center gap-2 mb-4">
-            <TruckIcon className="h-5 w-5 text-primary" />
-            <h2 className="text-xl font-bold">Histórico de Cotações</h2>
+      <div className="flex items-center gap-2 mb-4">
+        <TruckIcon className="h-5 w-5 text-primary" />
+        <h2 className="text-xl font-bold">Histórico de Cotações</h2>
+      </div>
+      
+      <ScrollArea className="h-[600px] pr-4 overflow-y-auto">
+        {historico.length === 0 ? (
+          <div className="text-center py-12 bg-muted/20 rounded-lg border border-dashed">
+            <TruckIcon className="h-12 w-12 text-muted-foreground mx-auto mb-3 opacity-50" />
+            <p className="text-muted-foreground">
+              Nenhuma cotação salva ainda.
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              As cotações salvas aparecerão aqui.
+            </p>
           </div>
-          
-          <ScrollArea className="h-[600px] pr-4 overflow-y-auto">
-            {historico.length === 0 ? (
-              <div className="text-center py-12 bg-muted/20 rounded-lg border border-dashed">
-                <TruckIcon className="h-12 w-12 text-muted-foreground mx-auto mb-3 opacity-50" />
-                <p className="text-muted-foreground">
-                  Nenhuma cotação salva ainda.
-                </p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  As cotações salvas aparecerão aqui.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {historico.map((item) => (
-                  <Collapsible 
-                    key={item.id} 
-                    open={expandedItems.includes(item.id)}
-                    onOpenChange={() => toggleExpand(item.id)}
-                    className="border rounded-md overflow-hidden"
-                  >
-                    <CollapsibleTrigger className="flex justify-between items-center w-full p-4 text-left hover:bg-muted/50 transition-colors">
-                      <div className="flex flex-col items-start gap-1">
-                        <div className="flex items-center gap-2">
-                          <TruckIcon className="h-5 w-5 text-primary" />
-                          <div className="font-medium">{item.cliente} <span className="text-muted-foreground">(Tomador do Serviço)</span></div>
+        ) : (
+          <div className="space-y-3">
+            {historico.map((item) => (
+              <Collapsible 
+                key={item.id} 
+                open={expandedItems.includes(item.id)}
+                onOpenChange={() => toggleExpand(item.id)}
+                className="border rounded-md overflow-hidden"
+              >
+                <CollapsibleTrigger className="flex justify-between items-center w-full p-4 text-left hover:bg-muted/50 transition-colors">
+                  <div className="flex flex-col items-start gap-1">
+                    <div className="flex items-center gap-2">
+                      <TruckIcon className="h-5 w-5 text-primary" />
+                      <div className="font-medium">{item.cliente} <span className="text-muted-foreground">(Tomador do Serviço)</span></div>
+                    </div>
+                    <div className="text-sm text-muted-foreground flex flex-wrap gap-x-6 mt-1">
+                      {item.origem && (
+                        <div className="flex items-center gap-1">
+                          <MapPinIcon className="h-3.5 w-3.5 text-primary" />
+                          <span className="font-medium">Origem:</span> {item.origem}
                         </div>
-                        <div className="text-sm text-muted-foreground flex flex-wrap gap-x-6 mt-1">
-                          {item.origem && (
-                            <div className="flex items-center gap-1">
-                              <MapPinIcon className="h-3.5 w-3.5 text-primary" />
-                              <span className="font-medium">Origem:</span> {item.origem}
-                            </div>
-                          )}
-                          {item.destino && (
-                            <div className="flex items-center gap-1">
-                              <MapPinIcon className="h-3.5 w-3.5 text-destructive" />
-                              <span className="font-medium">Destino:</span> {item.destino}
-                            </div>
-                          )}
-                          <div className="ml-auto">
-                            {item.data}
-                          </div>
+                      )}
+                      {item.destino && (
+                        <div className="flex items-center gap-1">
+                          <MapPinIcon className="h-3.5 w-3.5 text-destructive" />
+                          <span className="font-medium">Destino:</span> {item.destino}
                         </div>
+                      )}
+                      <div className="ml-auto">
+                        {item.data}
                       </div>
-                      <ChevronDown className={`h-5 w-5 transition-transform ${expandedItems.includes(item.id) ? 'transform rotate-180' : ''}`} />
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="border-t bg-muted/10">
-                      <HistoricoItem
-                        item={cotacaoEmEdicao && item.id === cotacaoEmEdicao.id ? cotacaoEmEdicao : item}
-                        removerCotacao={() => removerCotacao(item.id)}
-                        editarCotacao={() => editarCotacao(item.id)}
-                        modoEdicao={itemEditando === item.id}
-                        salvarEdicao={salvarEdicao}
-                        cancelarEdicao={cancelarEdicao}
-                        atualizarTransportadora={atualizarTransportadora}
-                        atualizarStatus={atualizarStatus}
-                        atualizarCampo={atualizarCampo}
-                        atualizarProduto={atualizarProduto}
-                        adicionarProduto={adicionarProduto}
-                        removerProduto={removerProduto}
-                        atualizarPropostaFinal={atualizarPropostaFinal}
-                      />
-                    </CollapsibleContent>
-                  </Collapsible>
-                ))}
-              </div>
-            )}
-          </ScrollArea>
-        </TabsContent>
-        
-        <TabsContent value="usuarios" className="mt-4">
-          <GerenciadorUsuarios />
-        </TabsContent>
-      </Tabs>
+                    </div>
+                  </div>
+                  <ChevronDown className={`h-5 w-5 transition-transform ${expandedItems.includes(item.id) ? 'transform rotate-180' : ''}`} />
+                </CollapsibleTrigger>
+                <CollapsibleContent className="border-t bg-muted/10">
+                  <HistoricoItem
+                    item={cotacaoEmEdicao && item.id === cotacaoEmEdicao.id ? cotacaoEmEdicao : item}
+                    removerCotacao={() => removerCotacao(item.id)}
+                    editarCotacao={() => editarCotacao(item.id)}
+                    modoEdicao={itemEditando === item.id}
+                    salvarEdicao={salvarEdicao}
+                    cancelarEdicao={cancelarEdicao}
+                    atualizarTransportadora={atualizarTransportadora}
+                    atualizarStatus={atualizarStatus}
+                    atualizarCampo={atualizarCampo}
+                    atualizarProduto={atualizarProduto}
+                    adicionarProduto={adicionarProduto}
+                    removerProduto={removerProduto}
+                    atualizarPropostaFinal={atualizarPropostaFinal}
+                  />
+                </CollapsibleContent>
+              </Collapsible>
+            ))}
+          </div>
+        )}
+      </ScrollArea>
     </div>
   );
 };

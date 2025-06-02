@@ -30,6 +30,7 @@ const ProdutosTable = ({
         nome: "",
         quantidade: 1,
         peso: "",
+        embalagem: "",
       },
     ]);
   };
@@ -61,6 +62,7 @@ const ProdutosTable = ({
               <TableHead>Produto</TableHead>
               <TableHead>Quantidade</TableHead>
               <TableHead>Peso (kg)</TableHead>
+              <TableHead>Embalagem</TableHead>
               <TableHead className="w-[100px]">Ação</TableHead>
             </TableRow>
           </TableHeader>
@@ -98,6 +100,15 @@ const ProdutosTable = ({
                     min="0"
                     step="0.1"
                     placeholder="Peso em kg"
+                  />
+                </TableCell>
+                <TableCell>
+                  <Input
+                    value={produto.embalagem}
+                    onChange={(e) =>
+                      atualizarProduto(produto.id, "embalagem", e.target.value)
+                    }
+                    placeholder="Tipo de embalagem"
                   />
                 </TableCell>
                 <TableCell>

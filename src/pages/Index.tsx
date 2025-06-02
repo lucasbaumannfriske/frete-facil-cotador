@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import ClienteForm from "@/components/ClienteForm";
 import ProdutosTable from "@/components/ProdutosTable";
@@ -37,7 +36,7 @@ const Index = () => {
 
   // Estado para produtos e transportadoras
   const [produtos, setProdutos] = useState<Produto[]>([
-    { id: "1", nome: "", quantidade: 1, peso: "" },
+    { id: "1", nome: "", quantidade: 1, peso: "", embalagem: "" },
   ]);
   const [transportadoras, setTransportadoras] = useState<Transportadora[]>([
     { id: "1", nome: "", prazo: "", valorUnitario: "", valorTotal: "", status: "Pendente", propostaFinal: "" },
@@ -136,7 +135,7 @@ const Index = () => {
     setCep("");
     setFazenda("");
     setObservacoes("");
-    setProdutos([{ id: "1", nome: "", quantidade: 1, peso: "" }]);
+    setProdutos([{ id: "1", nome: "", quantidade: 1, peso: "", embalagem: "" }]);
     setTransportadoras([
       { id: "1", nome: "", prazo: "", valorUnitario: "", valorTotal: "", status: "Pendente", propostaFinal: "" },
     ]);

@@ -1,7 +1,7 @@
 
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { TruckIcon, ChartBarIcon, LogOut } from "lucide-react";
+import { TruckIcon, ChartBarIcon, LogOut, User } from "lucide-react";
 import { toast } from "sonner";
 
 const Navigation = () => {
@@ -39,6 +39,16 @@ const Navigation = () => {
           >
             <ChartBarIcon className="h-4 w-4" />
             <span>Relatórios</span>
+          </Button>
+        </Link>
+
+        <Link to="/usuarios">
+          <Button 
+            variant={currentPath === "/usuarios" ? "default" : "ghost"} 
+            className="flex items-center gap-2"
+          >
+            <User className="h-4 w-4" />
+            <span>Usuários</span>
           </Button>
         </Link>
         
