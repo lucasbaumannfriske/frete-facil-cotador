@@ -1,6 +1,6 @@
 
 import { useEffect } from 'react'
-import { loginUsuarioLucas, supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase'
 import { toast } from 'sonner'
 
 const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -18,8 +18,19 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         if (!user) {
           console.log('Usuário não encontrado, fazendo login automático...')
-          await loginUsuarioLucas()
-          console.log('Login automático realizado')
+          
+          const { data, error } = await supabase.auth.signInWithPassword({
+            email: 'lucasfriske@agrofarm.net.br',
+            password: 'Nexus@4202'
+          })
+          
+          if (error) {
+            console.error('Erro no login automático:', error)
+            toast.error('Erro de autenticação: ' + error.message)
+          } else {
+            console.log('Login automático realizado')
+            toast.success('Usuário autenticado com sucesso')
+          }
         } else {
           console.log('Usuário já autenticado:', user.email)
         }

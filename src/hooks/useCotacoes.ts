@@ -144,11 +144,27 @@ export const useCotacoes = () => {
       
       if (authError || !user) {
         console.error('Usuário não autenticado:', authError)
-        toast.error('Usuário não autenticado')
+        const loginSuccess = await fazerLoginAutomatico()
+        if (!loginSuccess) {
+          toast.error('Falha na autenticação')
+          return false
+        }
+        // Tentar obter o usuário novamente após login
+        const { data: { user: newUser }, error: newAuthError } = await supabase.auth.getUser()
+        if (newAuthError || !newUser) {
+          toast.error('Ainda não foi possível autenticar')
+          return false
+        }
+      }
+
+      // Verificar novamente para ter certeza que temos o usuário
+      const { data: { user: currentUser } } = await supabase.auth.getUser()
+      if (!currentUser) {
+        toast.error('Usuário não encontrado após autenticação')
         return false
       }
 
-      console.log('Usuário autenticado para salvamento:', user.email)
+      console.log('Usuário autenticado para salvamento:', currentUser.email)
 
       // Inserir cotação principal
       const { data: cotacaoData, error: cotacaoError } = await supabase
@@ -165,7 +181,7 @@ export const useCotacoes = () => {
           destino: novaCotacao.destino,
           roteiro: novaCotacao.roteiro,
           observacoes: novaCotacao.observacoes,
-          user_id: user.id
+          user_id: currentUser.id
         })
         .select()
         .single()
@@ -211,7 +227,7 @@ export const useCotacoes = () => {
               status: transportadora.status,
               proposta_final: transportadora.propostaFinal,
               cotacao_id: cotacaoData.id,
-              user_id: user.id
+              user_id: currentUser.id
             }))
           )
 
@@ -229,6 +245,117 @@ export const useCotacoes = () => {
     } catch (error) {
       console.error('Erro inesperado ao salvar:', error)
       toast.error('Erro inesperado ao salvar cotação')
+      return false
+    }
+  }
+
+  // Atualizar cotação
+  const atualizarCotacao = async (cotacao: CotacaoSalva) => {
+    try {
+      console.log('Atualizando cotação:', cotacao.id)
+
+      // Verificar autenticação
+      const { data: { user }, error: authError } = await supabase.auth.getUser()
+      
+      if (authError || !user) {
+        console.error('Usuário não autenticado:', authError)
+        toast.error('Usuário não autenticado')
+        return false
+      }
+
+      // Atualizar cotação principal
+      const { error: cotacaoError } = await supabase
+        .from('cotacoes')
+        .update({
+          cliente: cotacao.cliente,
+          fazenda: cotacao.fazenda,
+          data: cotacao.data,
+          endereco: cotacao.endereco,
+          cidade: cotacao.cidade,
+          estado: cotacao.estado,
+          cep: cotacao.cep,
+          origem: cotacao.origem,
+          destino: cotacao.destino,
+          roteiro: cotacao.roteiro,
+          observacoes: cotacao.observacoes
+        })
+        .eq('id', cotacao.id)
+
+      if (cotacaoError) {
+        console.error('Erro ao atualizar cotação:', cotacaoError)
+        toast.error('Erro ao atualizar cotação: ' + cotacaoError.message)
+        return false
+      }
+
+      // Atualizar produtos (deletar todos e inserir novamente)
+      const { error: deleteProdutosError } = await supabase
+        .from('produtos')
+        .delete()
+        .eq('cotacao_id', cotacao.id)
+
+      if (deleteProdutosError) {
+        console.error('Erro ao deletar produtos:', deleteProdutosError)
+      }
+
+      if (cotacao.produtos.length > 0) {
+        const { error: produtosError } = await supabase
+          .from('produtos')
+          .insert(
+            cotacao.produtos.map(produto => ({
+              nome: produto.nome,
+              quantidade: produto.quantidade,
+              peso: produto.peso,
+              cotacao_id: cotacao.id
+            }))
+          )
+
+        if (produtosError) {
+          console.error('Erro ao atualizar produtos:', produtosError)
+          toast.error('Erro ao atualizar produtos: ' + produtosError.message)
+          return false
+        }
+      }
+
+      // Atualizar transportadoras (deletar todas e inserir novamente)
+      const { error: deleteTransportadorasError } = await supabase
+        .from('transportadoras')
+        .delete()
+        .eq('cotacao_id', cotacao.id)
+
+      if (deleteTransportadorasError) {
+        console.error('Erro ao deletar transportadoras:', deleteTransportadorasError)
+      }
+
+      if (cotacao.transportadoras.length > 0) {
+        const { error: transportadorasError } = await supabase
+          .from('transportadoras')
+          .insert(
+            cotacao.transportadoras.map(transportadora => ({
+              nome: transportadora.nome,
+              prazo: transportadora.prazo,
+              valor_unitario: transportadora.valorUnitario,
+              valor_total: transportadora.valorTotal,
+              status: transportadora.status,
+              proposta_final: transportadora.propostaFinal,
+              cotacao_id: cotacao.id,
+              user_id: user.id
+            }))
+          )
+
+        if (transportadorasError) {
+          console.error('Erro ao atualizar transportadoras:', transportadorasError)
+          toast.error('Erro ao atualizar transportadoras: ' + transportadorasError.message)
+          return false
+        }
+      }
+
+      toast.success('Cotação atualizada com sucesso!')
+      await carregarCotacoes() // Recarregar dados
+      return true
+
+    } catch (error) {
+      console.error('Erro inesperado ao atualizar:', error)
+      toast.error('Erro inesperado ao atualizar cotação')
       return false
     }
   }
@@ -266,6 +393,7 @@ export const useCotacoes = () => {
     loading,
     authenticated,
     salvarCotacao,
+    atualizarCotacao,
     deletarCotacao,
     carregarCotacoes
   }
