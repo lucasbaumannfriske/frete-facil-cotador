@@ -9,52 +9,44 @@ export const useCotacoes = () => {
   const [loading, setLoading] = useState(true)
   const [authenticated, setAuthenticated] = useState(false)
 
-  // Função para fazer login automático
-  const fazerLoginAutomatico = async () => {
+  // Função para autenticar o usuário Lucas
+  const autenticarUsuario = async () => {
     try {
-      console.log('Tentando login automático...')
+      console.log('Verificando autenticação...')
       
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: 'lucasfriske@agrofarm.net.br',
-        password: 'Nexus@4202'
-      })
+      // Primeiro verifica se já existe um usuário logado
+      const { data: { user }, error: userError } = await supabase.auth.getUser()
       
-      if (error) {
-        console.error('Erro no login automático:', error)
-        toast.error('Erro de autenticação: ' + error.message)
-        return false
+      if (userError) {
+        console.log('Erro ao verificar usuário:', userError)
       }
       
-      console.log('Login automático realizado com sucesso:', data.user?.email)
-      setAuthenticated(true)
-      return true
-    } catch (error) {
-      console.error('Erro inesperado no login:', error)
-      toast.error('Erro inesperado na autenticação')
-      return false
-    }
-  }
-
-  // Verificar se já está autenticado
-  const verificarAutenticacao = async () => {
-    try {
-      const { data: { user }, error } = await supabase.auth.getUser()
-      
-      if (error) {
-        console.error('Erro ao verificar usuário:', error)
-        return await fazerLoginAutomatico()
-      }
-      
-      if (user) {
+      if (!user) {
+        console.log('Usuário não encontrado, fazendo login...')
+        
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: 'lucasfriske@agrofarm.net.br',
+          password: 'Nexus@4202'
+        })
+        
+        if (error) {
+          console.error('Erro no login:', error)
+          toast.error('Erro de autenticação: ' + error.message)
+          return null
+        } else {
+          console.log('Login realizado com sucesso')
+          setAuthenticated(true)
+          return data.user
+        }
+      } else {
         console.log('Usuário já autenticado:', user.email)
         setAuthenticated(true)
-        return true
-      } else {
-        return await fazerLoginAutomatico()
+        return user
       }
     } catch (error) {
-      console.error('Erro na verificação:', error)
-      return await fazerLoginAutomatico()
+      console.error('Erro na autenticação:', error)
+      toast.error('Erro na autenticação')
+      return null
     }
   }
 
@@ -63,9 +55,9 @@ export const useCotacoes = () => {
     try {
       setLoading(true)
       
-      // Verificar autenticação primeiro
-      const isAuth = await verificarAutenticacao()
-      if (!isAuth) {
+      // Garantir que o usuário esteja autenticado
+      const user = await autenticarUsuario()
+      if (!user) {
         console.log('Falha na autenticação')
         setLoading(false)
         return
@@ -139,32 +131,14 @@ export const useCotacoes = () => {
     try {
       console.log('Iniciando salvamento da cotação...')
       
-      // Verificar autenticação
-      const { data: { user }, error: authError } = await supabase.auth.getUser()
-      
-      if (authError || !user) {
-        console.error('Usuário não autenticado:', authError)
-        const loginSuccess = await fazerLoginAutomatico()
-        if (!loginSuccess) {
-          toast.error('Falha na autenticação')
-          return false
-        }
-        // Tentar obter o usuário novamente após login
-        const { data: { user: newUser }, error: newAuthError } = await supabase.auth.getUser()
-        if (newAuthError || !newUser) {
-          toast.error('Ainda não foi possível autenticar')
-          return false
-        }
-      }
-
-      // Verificar novamente para ter certeza que temos o usuário
-      const { data: { user: currentUser } } = await supabase.auth.getUser()
-      if (!currentUser) {
-        toast.error('Usuário não encontrado após autenticação')
+      // Garantir que o usuário esteja autenticado
+      const user = await autenticarUsuario()
+      if (!user) {
+        toast.error('Falha na autenticação')
         return false
       }
 
-      console.log('Usuário autenticado para salvamento:', currentUser.email)
+      console.log('Usuário autenticado para salvamento:', user.email, 'ID:', user.id)
 
       // Inserir cotação principal
       const { data: cotacaoData, error: cotacaoError } = await supabase
@@ -181,7 +155,7 @@ export const useCotacoes = () => {
           destino: novaCotacao.destino,
           roteiro: novaCotacao.roteiro,
           observacoes: novaCotacao.observacoes,
-          user_id: currentUser.id
+          user_id: user.id
         })
         .select()
         .single()
@@ -227,7 +201,7 @@ export const useCotacoes = () => {
               status: transportadora.status,
               proposta_final: transportadora.propostaFinal,
               cotacao_id: cotacaoData.id,
-              user_id: currentUser.id
+              user_id: user.id
             }))
           )
 
@@ -254,11 +228,9 @@ export const useCotacoes = () => {
     try {
       console.log('Atualizando cotação:', cotacao.id)
 
-      // Verificar autenticação
-      const { data: { user }, error: authError } = await supabase.auth.getUser()
-      
-      if (authError || !user) {
-        console.error('Usuário não autenticado:', authError)
+      // Garantir que o usuário esteja autenticado
+      const user = await autenticarUsuario()
+      if (!user) {
         toast.error('Usuário não autenticado')
         return false
       }

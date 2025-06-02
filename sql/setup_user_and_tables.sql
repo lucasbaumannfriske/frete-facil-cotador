@@ -1,23 +1,25 @@
 
--- Primeiro, vamos criar o usuário no sistema de autenticação do Supabase
+-- Script para configurar usuário e tabelas no Supabase
 -- IMPORTANTE: Execute este script no SQL Editor do Supabase
 
--- Inserir o usuário Lucas no sistema de autenticação
--- Verificar se o usuário já existe antes de inserir
+-- Primeiro, vamos verificar e criar o usuário Lucas
 DO $$
 DECLARE
+    lucas_user_id uuid;
     user_exists boolean;
-    new_user_id uuid;
 BEGIN
     -- Verificar se o usuário já existe
     SELECT EXISTS(
         SELECT 1 FROM auth.users WHERE email = 'lucasfriske@agrofarm.net.br'
     ) INTO user_exists;
     
-    -- Se não existir, criar o usuário
-    IF NOT user_exists THEN
-        -- Gerar um novo UUID para o usuário
-        new_user_id := gen_random_uuid();
+    IF user_exists THEN
+        -- Se existe, pegar o ID
+        SELECT id INTO lucas_user_id FROM auth.users WHERE email = 'lucasfriske@agrofarm.net.br';
+        RAISE NOTICE 'Usuário Lucas já existe com ID: %', lucas_user_id;
+    ELSE
+        -- Se não existe, criar o usuário
+        lucas_user_id := gen_random_uuid();
         
         -- Inserir o usuário na tabela auth.users
         INSERT INTO auth.users (
@@ -52,7 +54,7 @@ BEGIN
             deleted_at
         ) VALUES (
             '00000000-0000-0000-0000-000000000000',
-            new_user_id,
+            lucas_user_id,
             'authenticated',
             'authenticated',
             'lucasfriske@agrofarm.net.br',
@@ -93,10 +95,10 @@ BEGIN
             updated_at,
             email
         ) VALUES (
-            new_user_id::text,
-            new_user_id,
+            lucas_user_id::text,
+            lucas_user_id,
             format('{"sub": "%s", "email": "%s", "email_verified": %s, "phone_verified": %s}', 
-                   new_user_id::text, 'lucasfriske@agrofarm.net.br', 'true', 'false')::jsonb,
+                   lucas_user_id::text, 'lucasfriske@agrofarm.net.br', 'true', 'false')::jsonb,
             'email',
             NOW(),
             NOW(),
@@ -104,29 +106,9 @@ BEGIN
             'lucasfriske@agrofarm.net.br'
         );
         
-        RAISE NOTICE 'Usuário Lucas criado com sucesso com ID: %', new_user_id;
-    ELSE
-        RAISE NOTICE 'Usuário Lucas já existe no sistema';
+        RAISE NOTICE 'Usuário Lucas criado com sucesso com ID: %', lucas_user_id;
     END IF;
 END $$;
-
--- Agora vamos recriar as tabelas com as estruturas corretas
-
--- Remover políticas existentes se existirem
-DROP POLICY IF EXISTS "Users can view their own cotacoes" ON cotacoes;
-DROP POLICY IF EXISTS "Users can insert their own cotacoes" ON cotacoes;
-DROP POLICY IF EXISTS "Users can update their own cotacoes" ON cotacoes;
-DROP POLICY IF EXISTS "Users can delete their own cotacoes" ON cotacoes;
-
-DROP POLICY IF EXISTS "Users can view produtos of their cotacoes" ON produtos;
-DROP POLICY IF EXISTS "Users can insert produtos for their cotacoes" ON produtos;
-DROP POLICY IF EXISTS "Users can update produtos of their cotacoes" ON produtos;
-DROP POLICY IF EXISTS "Users can delete produtos of their cotacoes" ON produtos;
-
-DROP POLICY IF EXISTS "Users can view transportadoras of their cotacoes" ON transportadoras;
-DROP POLICY IF EXISTS "Users can insert transportadoras for their cotacoes" ON transportadoras;
-DROP POLICY IF EXISTS "Users can update transportadoras of their cotacoes" ON transportadoras;
-DROP POLICY IF EXISTS "Users can delete transportadoras of their cotacoes" ON transportadoras;
 
 -- Remover tabelas se existirem (em ordem devido às foreign keys)
 DROP TABLE IF EXISTS transportadoras CASCADE;
@@ -268,11 +250,6 @@ CREATE POLICY "Users can delete transportadoras of their cotacoes" ON transporta
     );
 
 -- Verificar se tudo foi criado corretamente
-SELECT 'Tabelas criadas:' as status;
-SELECT tablename FROM pg_tables WHERE schemaname = 'public' AND tablename IN ('cotacoes', 'produtos', 'transportadoras');
-
-SELECT 'Usuário Lucas:' as status;
-SELECT id, email, created_at FROM auth.users WHERE email = 'lucasfriske@agrofarm.net.br';
-
-SELECT 'Políticas RLS:' as status;
-SELECT tablename, policyname FROM pg_policies WHERE schemaname = 'public';
+SELECT 'Configuração concluída!' as status;
+SELECT 'Usuário Lucas:' as info, id, email, created_at FROM auth.users WHERE email = 'lucasfriske@agrofarm.net.br';
+SELECT 'Tabelas criadas:' as info, tablename FROM pg_tables WHERE schemaname = 'public' AND tablename IN ('cotacoes', 'produtos', 'transportadoras');
