@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CotacaoSalva, Transportadora, Produto } from "@/types";
@@ -54,6 +55,7 @@ const Historico = ({ historico, loading = false }: HistoricoProps) => {
   const editarCotacao = (id: string) => {
     const cotacao = historico.find((item) => item.id === id);
     if (cotacao) {
+      console.log("Iniciando edição da cotação:", cotacao);
       setItemEditando(id);
       setCotacaoEmEdicao(JSON.parse(JSON.stringify(cotacao))); // Deep clone para evitar referências
       
@@ -91,6 +93,7 @@ const Historico = ({ historico, loading = false }: HistoricoProps) => {
 
   // Função para cancelar a edição
   const cancelarEdicao = () => {
+    console.log("Cancelando edição");
     setItemEditando(null);
     setCotacaoEmEdicao(null);
   };
@@ -101,7 +104,12 @@ const Historico = ({ historico, loading = false }: HistoricoProps) => {
     campo: keyof Transportadora, 
     valor: string
   ) => {
-    if (!cotacaoEmEdicao) return;
+    console.log("Atualizando transportadora:", transportadoraIndex, campo, valor);
+    
+    if (!cotacaoEmEdicao) {
+      console.log("Nenhuma cotação em edição");
+      return;
+    }
 
     const novasTransportadoras = [...cotacaoEmEdicao.transportadoras];
     novasTransportadoras[transportadoraIndex] = {
@@ -109,20 +117,31 @@ const Historico = ({ historico, loading = false }: HistoricoProps) => {
       [campo]: valor,
     };
 
-    setCotacaoEmEdicao({
+    const novaCotacao = {
       ...cotacaoEmEdicao,
       transportadoras: novasTransportadoras,
-    });
+    };
+    
+    console.log("Nova cotação após atualização:", novaCotacao);
+    setCotacaoEmEdicao(novaCotacao);
   };
 
   // Função para atualizar um campo da cotação durante a edição
   const atualizarCampo = (campo: keyof CotacaoSalva, valor: string) => {
-    if (!cotacaoEmEdicao) return;
+    console.log("Atualizando campo:", campo, valor);
+    
+    if (!cotacaoEmEdicao) {
+      console.log("Nenhuma cotação em edição");
+      return;
+    }
 
-    setCotacaoEmEdicao({
+    const novaCotacao = {
       ...cotacaoEmEdicao,
       [campo]: valor,
-    });
+    };
+    
+    console.log("Nova cotação após atualização de campo:", novaCotacao);
+    setCotacaoEmEdicao(novaCotacao);
   };
 
   // Função para atualizar um produto durante a edição
@@ -131,7 +150,12 @@ const Historico = ({ historico, loading = false }: HistoricoProps) => {
     campo: keyof Produto,
     valor: string | number
   ) => {
-    if (!cotacaoEmEdicao) return;
+    console.log("Atualizando produto:", produtoIndex, campo, valor);
+    
+    if (!cotacaoEmEdicao) {
+      console.log("Nenhuma cotação em edição");
+      return;
+    }
 
     const novosProdutos = [...cotacaoEmEdicao.produtos];
     novosProdutos[produtoIndex] = {
@@ -139,10 +163,13 @@ const Historico = ({ historico, loading = false }: HistoricoProps) => {
       [campo]: valor,
     };
 
-    setCotacaoEmEdicao({
+    const novaCotacao = {
       ...cotacaoEmEdicao,
       produtos: novosProdutos,
-    });
+    };
+    
+    console.log("Nova cotação após atualização de produto:", novaCotacao);
+    setCotacaoEmEdicao(novaCotacao);
   };
 
   // Função para adicionar um novo produto durante a edição
