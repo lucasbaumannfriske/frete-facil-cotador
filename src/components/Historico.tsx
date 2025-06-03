@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CotacaoSalva, Transportadora, Produto } from "@/types";
 import HistoricoItem from "./HistoricoItem";
@@ -23,6 +22,16 @@ const Historico = ({ historico, loading = false }: HistoricoProps) => {
   const [itemEditando, setItemEditando] = useState<string | null>(null);
   const [cotacaoEmEdicao, setCotacaoEmEdicao] = useState<CotacaoSalva | null>(null);
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
+
+  // Atualizar cotação em edição quando o histórico mudar
+  useEffect(() => {
+    if (itemEditando && cotacaoEmEdicao) {
+      const cotacaoAtualizada = historico.find(item => item.id === itemEditando);
+      if (cotacaoAtualizada) {
+        setCotacaoEmEdicao(cotacaoAtualizada);
+      }
+    }
+  }, [historico, itemEditando, cotacaoEmEdicao]);
 
   // Toggle the expanded/collapsed state of an item
   const toggleExpand = (id: string) => {
@@ -239,8 +248,8 @@ const Historico = ({ historico, loading = false }: HistoricoProps) => {
         ) : (
           <div className="space-y-3">
             {historico.map((item) => {
-              // Use a cotação em edição se estivermos editando este item
-              const itemParaExibir = (itemEditando === item.id && cotacaoEmEdicao) ? cotacaoEmEdicao : item;
+              // Use a cotação atual do histórico, não a em edição
+              const itemParaExibir = item;
               
               return (
                 <Collapsible 
@@ -277,7 +286,7 @@ const Historico = ({ historico, loading = false }: HistoricoProps) => {
                   </CollapsibleTrigger>
                   <CollapsibleContent className="border-t bg-muted/10">
                     <HistoricoItem
-                      item={itemParaExibir}
+                      item={itemEditando === item.id && cotacaoEmEdicao ? cotacaoEmEdicao : itemParaExibir}
                       removerCotacao={() => removerCotacao(item.id)}
                       editarCotacao={() => editarCotacao(item.id)}
                       modoEdicao={itemEditando === item.id}
