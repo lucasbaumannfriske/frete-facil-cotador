@@ -62,7 +62,7 @@ const Historico = ({ historico, loading = false }: HistoricoProps) => {
       return;
     }
 
-    console.log("Salvando cotação:", cotacaoEmEdicao);
+    console.log("Salvando cotação editada:", cotacaoEmEdicao);
     
     try {
       const sucesso = await atualizarCotacao(cotacaoEmEdicao);
@@ -180,6 +180,7 @@ const Historico = ({ historico, loading = false }: HistoricoProps) => {
     
     if (sucesso) {
       setCotacaoEmEdicao(cotacaoAtualizada);
+      toast.success("Status atualizado com sucesso!");
     }
   };
   
@@ -202,6 +203,7 @@ const Historico = ({ historico, loading = false }: HistoricoProps) => {
     
     if (sucesso) {
       setCotacaoEmEdicao(cotacaoAtualizada);
+      toast.success("Proposta final atualizada com sucesso!");
     }
   };
 
@@ -236,58 +238,63 @@ const Historico = ({ historico, loading = false }: HistoricoProps) => {
           </div>
         ) : (
           <div className="space-y-3">
-            {historico.map((item) => (
-              <Collapsible 
-                key={item.id} 
-                open={expandedItems.includes(item.id)}
-                onOpenChange={() => toggleExpand(item.id)}
-                className="border rounded-md overflow-hidden"
-              >
-                <CollapsibleTrigger className="flex justify-between items-center w-full p-4 text-left hover:bg-muted/50 transition-colors">
-                  <div className="flex flex-col items-start gap-1">
-                    <div className="flex items-center gap-2">
-                      <TruckIcon className="h-5 w-5 text-primary" />
-                      <div className="font-medium">{item.cliente} <span className="text-muted-foreground">(Tomador do Serviço)</span></div>
-                    </div>
-                    <div className="text-sm text-muted-foreground flex flex-wrap gap-x-6 mt-1">
-                      {item.origem && (
-                        <div className="flex items-center gap-1">
-                          <MapPinIcon className="h-3.5 w-3.5 text-primary" />
-                          <span className="font-medium">Origem:</span> {item.origem}
+            {historico.map((item) => {
+              // Use a cotação em edição se estivermos editando este item
+              const itemParaExibir = (itemEditando === item.id && cotacaoEmEdicao) ? cotacaoEmEdicao : item;
+              
+              return (
+                <Collapsible 
+                  key={item.id} 
+                  open={expandedItems.includes(item.id)}
+                  onOpenChange={() => toggleExpand(item.id)}
+                  className="border rounded-md overflow-hidden"
+                >
+                  <CollapsibleTrigger className="flex justify-between items-center w-full p-4 text-left hover:bg-muted/50 transition-colors">
+                    <div className="flex flex-col items-start gap-1">
+                      <div className="flex items-center gap-2">
+                        <TruckIcon className="h-5 w-5 text-primary" />
+                        <div className="font-medium">{itemParaExibir.cliente} <span className="text-muted-foreground">(Tomador do Serviço)</span></div>
+                      </div>
+                      <div className="text-sm text-muted-foreground flex flex-wrap gap-x-6 mt-1">
+                        {itemParaExibir.origem && (
+                          <div className="flex items-center gap-1">
+                            <MapPinIcon className="h-3.5 w-3.5 text-primary" />
+                            <span className="font-medium">Origem:</span> {itemParaExibir.origem}
+                          </div>
+                        )}
+                        {itemParaExibir.destino && (
+                          <div className="flex items-center gap-1">
+                            <MapPinIcon className="h-3.5 w-3.5 text-destructive" />
+                            <span className="font-medium">Destino:</span> {itemParaExibir.destino}
+                          </div>
+                        )}
+                        <div className="ml-auto">
+                          {itemParaExibir.data}
                         </div>
-                      )}
-                      {item.destino && (
-                        <div className="flex items-center gap-1">
-                          <MapPinIcon className="h-3.5 w-3.5 text-destructive" />
-                          <span className="font-medium">Destino:</span> {item.destino}
-                        </div>
-                      )}
-                      <div className="ml-auto">
-                        {item.data}
                       </div>
                     </div>
-                  </div>
-                  <ChevronDown className={`h-5 w-5 transition-transform ${expandedItems.includes(item.id) ? 'transform rotate-180' : ''}`} />
-                </CollapsibleTrigger>
-                <CollapsibleContent className="border-t bg-muted/10">
-                  <HistoricoItem
-                    item={cotacaoEmEdicao && item.id === cotacaoEmEdicao.id ? cotacaoEmEdicao : item}
-                    removerCotacao={() => removerCotacao(item.id)}
-                    editarCotacao={() => editarCotacao(item.id)}
-                    modoEdicao={itemEditando === item.id}
-                    salvarEdicao={salvarEdicao}
-                    cancelarEdicao={cancelarEdicao}
-                    atualizarTransportadora={atualizarTransportadora}
-                    atualizarStatus={atualizarStatus}
-                    atualizarCampo={atualizarCampo}
-                    atualizarProduto={atualizarProduto}
-                    adicionarProduto={adicionarProduto}
-                    removerProduto={removerProduto}
-                    atualizarPropostaFinal={atualizarPropostaFinal}
-                  />
-                </CollapsibleContent>
-              </Collapsible>
-            ))}
+                    <ChevronDown className={`h-5 w-5 transition-transform ${expandedItems.includes(item.id) ? 'transform rotate-180' : ''}`} />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="border-t bg-muted/10">
+                    <HistoricoItem
+                      item={itemParaExibir}
+                      removerCotacao={() => removerCotacao(item.id)}
+                      editarCotacao={() => editarCotacao(item.id)}
+                      modoEdicao={itemEditando === item.id}
+                      salvarEdicao={salvarEdicao}
+                      cancelarEdicao={cancelarEdicao}
+                      atualizarTransportadora={atualizarTransportadora}
+                      atualizarStatus={atualizarStatus}
+                      atualizarCampo={atualizarCampo}
+                      atualizarProduto={atualizarProduto}
+                      adicionarProduto={adicionarProduto}
+                      removerProduto={removerProduto}
+                      atualizarPropostaFinal={atualizarPropostaFinal}
+                    />
+                  </CollapsibleContent>
+                </Collapsible>
+              );
+            })}
           </div>
         )}
       </ScrollArea>
