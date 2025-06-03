@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CotacaoSalva, Transportadora, Produto } from "@/types";
@@ -9,6 +10,7 @@ import {
   CollapsibleTrigger 
 } from "@/components/ui/collapsible";
 import { useCotacoes } from "@/hooks/useCotacoes";
+import { toast } from "sonner";
 
 interface HistoricoProps {
   historico: CotacaoSalva[];
@@ -55,13 +57,26 @@ const Historico = ({ historico, loading = false }: HistoricoProps) => {
 
   // Função para salvar as edições feitas em uma cotação
   const salvarEdicao = async () => {
-    if (!cotacaoEmEdicao) return;
+    if (!cotacaoEmEdicao) {
+      toast.error("Nenhuma cotação em edição");
+      return;
+    }
 
-    const sucesso = await atualizarCotacao(cotacaoEmEdicao);
+    console.log("Salvando cotação:", cotacaoEmEdicao);
     
-    if (sucesso) {
-      setItemEditando(null);
-      setCotacaoEmEdicao(null);
+    try {
+      const sucesso = await atualizarCotacao(cotacaoEmEdicao);
+      
+      if (sucesso) {
+        setItemEditando(null);
+        setCotacaoEmEdicao(null);
+        toast.success("Cotação atualizada com sucesso!");
+      } else {
+        toast.error("Erro ao salvar as alterações");
+      }
+    } catch (error) {
+      console.error("Erro ao salvar cotação:", error);
+      toast.error("Erro inesperado ao salvar");
     }
   };
 
@@ -147,7 +162,7 @@ const Historico = ({ historico, loading = false }: HistoricoProps) => {
   };
 
   // Função para atualizar o status de uma transportadora
-  const atualizarStatus = (transportadoraIndex: number, status: string) => {
+  const atualizarStatus = async (transportadoraIndex: number, status: string) => {
     if (!cotacaoEmEdicao) return;
 
     const novasTransportadoras = [...cotacaoEmEdicao.transportadoras];
@@ -156,10 +171,16 @@ const Historico = ({ historico, loading = false }: HistoricoProps) => {
       status: status
     };
 
-    setCotacaoEmEdicao({
+    const cotacaoAtualizada = {
       ...cotacaoEmEdicao,
       transportadoras: novasTransportadoras
-    });
+    };
+
+    const sucesso = await atualizarCotacao(cotacaoAtualizada);
+    
+    if (sucesso) {
+      setCotacaoEmEdicao(cotacaoAtualizada);
+    }
   };
   
   // Função para atualizar a proposta final de uma transportadora
