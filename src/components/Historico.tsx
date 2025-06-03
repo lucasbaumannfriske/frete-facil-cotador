@@ -248,9 +248,6 @@ const Historico = ({ historico, loading = false }: HistoricoProps) => {
         ) : (
           <div className="space-y-3">
             {historico.map((item) => {
-              // Use a cotação atual do histórico, não a em edição
-              const itemParaExibir = item;
-              
               return (
                 <Collapsible 
                   key={item.id} 
@@ -262,23 +259,23 @@ const Historico = ({ historico, loading = false }: HistoricoProps) => {
                     <div className="flex flex-col items-start gap-1">
                       <div className="flex items-center gap-2">
                         <TruckIcon className="h-5 w-5 text-primary" />
-                        <div className="font-medium">{itemParaExibir.cliente} <span className="text-muted-foreground">(Tomador do Serviço)</span></div>
+                        <div className="font-medium">{item.cliente} <span className="text-muted-foreground">(Tomador do Serviço)</span></div>
                       </div>
                       <div className="text-sm text-muted-foreground flex flex-wrap gap-x-6 mt-1">
-                        {itemParaExibir.origem && (
+                        {item.origem && (
                           <div className="flex items-center gap-1">
                             <MapPinIcon className="h-3.5 w-3.5 text-primary" />
-                            <span className="font-medium">Origem:</span> {itemParaExibir.origem}
+                            <span className="font-medium">Origem:</span> {item.origem}
                           </div>
                         )}
-                        {itemParaExibir.destino && (
+                        {item.destino && (
                           <div className="flex items-center gap-1">
                             <MapPinIcon className="h-3.5 w-3.5 text-destructive" />
-                            <span className="font-medium">Destino:</span> {itemParaExibir.destino}
+                            <span className="font-medium">Destino:</span> {item.destino}
                           </div>
                         )}
                         <div className="ml-auto">
-                          {itemParaExibir.data}
+                          {item.data}
                         </div>
                       </div>
                     </div>
@@ -286,7 +283,7 @@ const Historico = ({ historico, loading = false }: HistoricoProps) => {
                   </CollapsibleTrigger>
                   <CollapsibleContent className="border-t bg-muted/10">
                     <HistoricoItem
-                      item={itemEditando === item.id && cotacaoEmEdicao ? cotacaoEmEdicao : itemParaExibir}
+                      item={itemEditando === item.id && cotacaoEmEdicao ? cotacaoEmEdicao : item}
                       removerCotacao={() => removerCotacao(item.id)}
                       editarCotacao={() => editarCotacao(item.id)}
                       modoEdicao={itemEditando === item.id}
