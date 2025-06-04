@@ -21,18 +21,7 @@ interface HistoricoProps {
 const Historico = ({ historico, loading = false }: HistoricoProps) => {
   const { atualizarCotacao, deletarCotacao } = useCotacoes();
   const [itemEditando, setItemEditando] = useState<string | null>(null);
-  const [cotacaoEmEdicao, setCotacaoEmEdicao] = useState<CotacaoSalva | null>(null);
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
-
-  // Atualizar cotação em edição quando o histórico mudar
-  useEffect(() => {
-    if (itemEditando && cotacaoEmEdicao) {
-      const cotacaoAtualizada = historico.find(item => item.id === itemEditando);
-      if (cotacaoAtualizada) {
-        setCotacaoEmEdicao(cotacaoAtualizada);
-      }
-    }
-  }, [historico, itemEditando, cotacaoEmEdicao]);
 
   // Toggle the expanded/collapsed state of an item
   const toggleExpand = (id: string) => {
@@ -53,34 +42,24 @@ const Historico = ({ historico, loading = false }: HistoricoProps) => {
 
   // Função para iniciar a edição de uma cotação
   const editarCotacao = (id: string) => {
-    const cotacao = historico.find((item) => item.id === id);
-    if (cotacao) {
-      console.log("Iniciando edição da cotação:", cotacao);
-      setItemEditando(id);
-      setCotacaoEmEdicao(JSON.parse(JSON.stringify(cotacao))); // Deep clone para evitar referências
-      
-      // Expand the item when editing
-      if (!expandedItems.includes(id)) {
-        setExpandedItems([...expandedItems, id]);
-      }
+    console.log("Iniciando edição da cotação:", id);
+    setItemEditando(id);
+    
+    // Expand the item when editing
+    if (!expandedItems.includes(id)) {
+      setExpandedItems([...expandedItems, id]);
     }
   };
 
   // Função para salvar as edições feitas em uma cotação
-  const salvarEdicao = async () => {
-    if (!cotacaoEmEdicao) {
-      toast.error("Nenhuma cotação em edição");
-      return;
-    }
-
-    console.log("Salvando cotação editada:", cotacaoEmEdicao);
+  const salvarEdicao = async (cotacaoAtualizada: CotacaoSalva) => {
+    console.log("Salvando cotação editada:", cotacaoAtualizada);
     
     try {
-      const sucesso = await atualizarCotacao(cotacaoEmEdicao);
+      const sucesso = await atualizarCotacao(cotacaoAtualizada);
       
       if (sucesso) {
         setItemEditando(null);
-        setCotacaoEmEdicao(null);
         toast.success("Cotação atualizada com sucesso!");
       } else {
         toast.error("Erro ao salvar as alterações");
@@ -95,152 +74,6 @@ const Historico = ({ historico, loading = false }: HistoricoProps) => {
   const cancelarEdicao = () => {
     console.log("Cancelando edição");
     setItemEditando(null);
-    setCotacaoEmEdicao(null);
-  };
-
-  // Função para atualizar uma transportadora durante a edição
-  const atualizarTransportadora = (
-    transportadoraIndex: number, 
-    campo: keyof Transportadora, 
-    valor: string
-  ) => {
-    console.log("Atualizando transportadora:", transportadoraIndex, campo, valor);
-    
-    if (!cotacaoEmEdicao) {
-      console.log("Nenhuma cotação em edição");
-      return;
-    }
-
-    const novasTransportadoras = [...cotacaoEmEdicao.transportadoras];
-    novasTransportadoras[transportadoraIndex] = {
-      ...novasTransportadoras[transportadoraIndex],
-      [campo]: valor,
-    };
-
-    const novaCotacao = {
-      ...cotacaoEmEdicao,
-      transportadoras: novasTransportadoras,
-    };
-    
-    console.log("Nova cotação após atualização:", novaCotacao);
-    setCotacaoEmEdicao(novaCotacao);
-  };
-
-  // Função para atualizar um campo da cotação durante a edição
-  const atualizarCampo = (campo: keyof CotacaoSalva, valor: string) => {
-    console.log("Atualizando campo:", campo, valor);
-    
-    if (!cotacaoEmEdicao) {
-      console.log("Nenhuma cotação em edição");
-      return;
-    }
-
-    const novaCotacao = {
-      ...cotacaoEmEdicao,
-      [campo]: valor,
-    };
-    
-    console.log("Nova cotação após atualização de campo:", novaCotacao);
-    setCotacaoEmEdicao(novaCotacao);
-  };
-
-  // Função para atualizar um produto durante a edição
-  const atualizarProduto = (
-    produtoIndex: number,
-    campo: keyof Produto,
-    valor: string | number
-  ) => {
-    console.log("Atualizando produto:", produtoIndex, campo, valor);
-    
-    if (!cotacaoEmEdicao) {
-      console.log("Nenhuma cotação em edição");
-      return;
-    }
-
-    const novosProdutos = [...cotacaoEmEdicao.produtos];
-    novosProdutos[produtoIndex] = {
-      ...novosProdutos[produtoIndex],
-      [campo]: valor,
-    };
-
-    const novaCotacao = {
-      ...cotacaoEmEdicao,
-      produtos: novosProdutos,
-    };
-    
-    console.log("Nova cotação após atualização de produto:", novaCotacao);
-    setCotacaoEmEdicao(novaCotacao);
-  };
-
-  // Função para adicionar um novo produto durante a edição
-  const adicionarProduto = () => {
-    if (!cotacaoEmEdicao) return;
-
-    setCotacaoEmEdicao({
-      ...cotacaoEmEdicao,
-      produtos: [
-        ...cotacaoEmEdicao.produtos,
-        { id: Date.now().toString(), nome: "", quantidade: 1, peso: "", embalagem: "" }
-      ]
-    });
-  };
-
-  // Função para remover um produto durante a edição
-  const removerProduto = (produtoIndex: number) => {
-    if (!cotacaoEmEdicao || cotacaoEmEdicao.produtos.length <= 1) return;
-
-    const novosProdutos = cotacaoEmEdicao.produtos.filter((_, idx) => idx !== produtoIndex);
-    
-    setCotacaoEmEdicao({
-      ...cotacaoEmEdicao,
-      produtos: novosProdutos
-    });
-  };
-
-  // Função para atualizar o status de uma transportadora
-  const atualizarStatus = async (transportadoraIndex: number, status: string) => {
-    if (!cotacaoEmEdicao) return;
-
-    const novasTransportadoras = [...cotacaoEmEdicao.transportadoras];
-    novasTransportadoras[transportadoraIndex] = {
-      ...novasTransportadoras[transportadoraIndex],
-      status: status
-    };
-
-    const cotacaoAtualizada = {
-      ...cotacaoEmEdicao,
-      transportadoras: novasTransportadoras
-    };
-
-    const sucesso = await atualizarCotacao(cotacaoAtualizada);
-    
-    if (sucesso) {
-      setCotacaoEmEdicao(cotacaoAtualizada);
-      toast.success("Status atualizado com sucesso!");
-    }
-  };
-  
-  // Função para atualizar a proposta final de uma transportadora
-  const atualizarPropostaFinal = async (transportadoraIndex: number, propostaFinal: string) => {
-    if (!cotacaoEmEdicao) return;
-
-    const novasTransportadoras = [...cotacaoEmEdicao.transportadoras];
-    novasTransportadoras[transportadoraIndex] = {
-      ...novasTransportadoras[transportadoraIndex],
-      propostaFinal: propostaFinal
-    };
-
-    const cotacaoAtualizada = {
-      ...cotacaoEmEdicao,
-      transportadoras: novasTransportadoras
-    };
-
-    const sucesso = await atualizarCotacao(cotacaoAtualizada);
-    
-    if (sucesso) {
-      setCotacaoEmEdicao(cotacaoAtualizada);
-      toast.success("Proposta final atualizada com sucesso!");
-    }
   };
 
   if (loading) {
@@ -275,9 +108,6 @@ const Historico = ({ historico, loading = false }: HistoricoProps) => {
         ) : (
           <div className="space-y-3">
             {historico.map((item) => {
-              // Se está editando este item, usar a cotação em edição, senão usar o item original
-              const itemParaRender = itemEditando === item.id && cotacaoEmEdicao ? cotacaoEmEdicao : item;
-              
               return (
                 <Collapsible 
                   key={item.id} 
@@ -289,23 +119,23 @@ const Historico = ({ historico, loading = false }: HistoricoProps) => {
                     <div className="flex flex-col items-start gap-1">
                       <div className="flex items-center gap-2">
                         <TruckIcon className="h-5 w-5 text-primary" />
-                        <div className="font-medium">{itemParaRender.cliente} <span className="text-muted-foreground">(Tomador do Serviço)</span></div>
+                        <div className="font-medium">{item.cliente} <span className="text-muted-foreground">(Tomador do Serviço)</span></div>
                       </div>
                       <div className="text-sm text-muted-foreground flex flex-wrap gap-x-6 mt-1">
-                        {itemParaRender.origem && (
+                        {item.origem && (
                           <div className="flex items-center gap-1">
                             <MapPinIcon className="h-3.5 w-3.5 text-primary" />
-                            <span className="font-medium">Origem:</span> {itemParaRender.origem}
+                            <span className="font-medium">Origem:</span> {item.origem}
                           </div>
                         )}
-                        {itemParaRender.destino && (
+                        {item.destino && (
                           <div className="flex items-center gap-1">
                             <MapPinIcon className="h-3.5 w-3.5 text-destructive" />
-                            <span className="font-medium">Destino:</span> {itemParaRender.destino}
+                            <span className="font-medium">Destino:</span> {item.destino}
                           </div>
                         )}
                         <div className="ml-auto">
-                          {itemParaRender.data}
+                          {item.data}
                         </div>
                       </div>
                     </div>
@@ -313,19 +143,12 @@ const Historico = ({ historico, loading = false }: HistoricoProps) => {
                   </CollapsibleTrigger>
                   <CollapsibleContent className="border-t bg-muted/10">
                     <HistoricoItem
-                      item={itemParaRender}
+                      item={item}
                       removerCotacao={() => removerCotacao(item.id)}
                       editarCotacao={() => editarCotacao(item.id)}
                       modoEdicao={itemEditando === item.id}
                       salvarEdicao={salvarEdicao}
                       cancelarEdicao={cancelarEdicao}
-                      atualizarTransportadora={atualizarTransportadora}
-                      atualizarStatus={atualizarStatus}
-                      atualizarCampo={atualizarCampo}
-                      atualizarProduto={atualizarProduto}
-                      adicionarProduto={adicionarProduto}
-                      removerProduto={removerProduto}
-                      atualizarPropostaFinal={atualizarPropostaFinal}
                     />
                   </CollapsibleContent>
                 </Collapsible>

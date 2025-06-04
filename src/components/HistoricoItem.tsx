@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Accordion,
   AccordionContent,
@@ -7,7 +7,6 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
-import { CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -19,22 +18,15 @@ import {
 } from "@/components/ui/select";
 import { CotacaoSalva, Transportadora, Produto } from "@/types";
 import { StatusBadge } from "./StatusBadge";
-import { CalendarIcon, MapPinIcon, TruckIcon, PackageIcon, Edit, Trash2, Save } from "lucide-react";
+import { TruckIcon, Edit, Trash2, Save } from "lucide-react";
 
 interface HistoricoItemProps {
   item: CotacaoSalva;
   removerCotacao: (id: string) => void;
   editarCotacao: (id: string) => void;
   modoEdicao: boolean;
-  salvarEdicao: () => void;
+  salvarEdicao: (cotacao: CotacaoSalva) => void;
   cancelarEdicao: () => void;
-  atualizarTransportadora: (transportadoraIndex: number, campo: keyof Transportadora, valor: string) => void;
-  atualizarStatus: (transportadoraIndex: number, status: string) => void;
-  atualizarCampo: (campo: keyof CotacaoSalva, valor: string) => void;
-  atualizarProduto: (produtoIndex: number, campo: keyof Produto, valor: string | number) => void;
-  adicionarProduto: () => void;
-  removerProduto: (produtoIndex: number) => void;
-  atualizarPropostaFinal: (transportadoraIndex: number, propostaFinal: string) => void;
 }
 
 const HistoricoItem = ({
@@ -44,16 +36,91 @@ const HistoricoItem = ({
   modoEdicao,
   salvarEdicao,
   cancelarEdicao,
-  atualizarTransportadora,
-  atualizarStatus,
-  atualizarCampo,
-  atualizarProduto,
-  adicionarProduto,
-  removerProduto,
-  atualizarPropostaFinal,
 }: HistoricoItemProps) => {
 
-  console.log("HistoricoItem - modoEdicao:", modoEdicao, "item:", item);
+  const [cotacaoLocal, setCotacaoLocal] = useState<CotacaoSalva>(item);
+
+  // Atualizar estado local quando o item mudar ou entrar em modo de edição
+  useEffect(() => {
+    setCotacaoLocal(item);
+  }, [item, modoEdicao]);
+
+  console.log("HistoricoItem - modoEdicao:", modoEdicao, "cotacaoLocal:", cotacaoLocal);
+
+  // Função para atualizar um campo da cotação
+  const atualizarCampo = (campo: keyof CotacaoSalva, valor: string) => {
+    console.log("Atualizando campo:", campo, "para:", valor);
+    setCotacaoLocal(prev => ({
+      ...prev,
+      [campo]: valor
+    }));
+  };
+
+  // Função para atualizar uma transportadora
+  const atualizarTransportadora = (
+    transportadoraIndex: number, 
+    campo: keyof Transportadora, 
+    valor: string
+  ) => {
+    console.log("Atualizando transportadora:", transportadoraIndex, campo, "para:", valor);
+    setCotacaoLocal(prev => {
+      const novasTransportadoras = [...prev.transportadoras];
+      novasTransportadoras[transportadoraIndex] = {
+        ...novasTransportadoras[transportadoraIndex],
+        [campo]: valor,
+      };
+      return {
+        ...prev,
+        transportadoras: novasTransportadoras
+      };
+    });
+  };
+
+  // Função para atualizar um produto
+  const atualizarProduto = (
+    produtoIndex: number,
+    campo: keyof Produto,
+    valor: string | number
+  ) => {
+    console.log("Atualizando produto:", produtoIndex, campo, "para:", valor);
+    setCotacaoLocal(prev => {
+      const novosProdutos = [...prev.produtos];
+      novosProdutos[produtoIndex] = {
+        ...novosProdutos[produtoIndex],
+        [campo]: valor,
+      };
+      return {
+        ...prev,
+        produtos: novosProdutos
+      };
+    });
+  };
+
+  // Função para adicionar um novo produto
+  const adicionarProduto = () => {
+    setCotacaoLocal(prev => ({
+      ...prev,
+      produtos: [
+        ...prev.produtos,
+        { id: Date.now().toString(), nome: "", quantidade: 1, peso: "", embalagem: "" }
+      ]
+    }));
+  };
+
+  // Função para remover um produto
+  const removerProduto = (produtoIndex: number) => {
+    if (cotacaoLocal.produtos.length <= 1) return;
+
+    setCotacaoLocal(prev => ({
+      ...prev,
+      produtos: prev.produtos.filter((_, idx) => idx !== produtoIndex)
+    }));
+  };
+
+  // Função para salvar
+  const handleSalvar = () => {
+    salvarEdicao(cotacaoLocal);
+  };
 
   return (
     <div className="p-4">
@@ -65,18 +132,15 @@ const HistoricoItem = ({
               <div className="mb-3">
                 <label className="text-sm font-medium mb-1 block">Cliente:</label>
                 <Input
-                  value={item.cliente || ""}
-                  onChange={(e) => {
-                    console.log("Alterando cliente para:", e.target.value);
-                    atualizarCampo('cliente', e.target.value);
-                  }}
+                  value={cotacaoLocal.cliente || ""}
+                  onChange={(e) => atualizarCampo('cliente', e.target.value)}
                   placeholder="Nome do cliente"
                   className="w-full"
                 />
               </div>
             ) : (
               <div className="flex items-center gap-2 mb-1">
-                <span className="font-medium">Cliente:</span> {item.cliente}
+                <span className="font-medium">Cliente:</span> {cotacaoLocal.cliente}
               </div>
             )}
 
@@ -85,29 +149,23 @@ const HistoricoItem = ({
                 <div>
                   <label className="text-sm font-medium mb-1 block">Cidade:</label>
                   <Input
-                    value={item.cidade || ""}
-                    onChange={(e) => {
-                      console.log("Alterando cidade para:", e.target.value);
-                      atualizarCampo('cidade', e.target.value);
-                    }}
+                    value={cotacaoLocal.cidade || ""}
+                    onChange={(e) => atualizarCampo('cidade', e.target.value)}
                     placeholder="Cidade"
                   />
                 </div>
                 <div>
                   <label className="text-sm font-medium mb-1 block">Estado:</label>
                   <Input
-                    value={item.estado || ""}
-                    onChange={(e) => {
-                      console.log("Alterando estado para:", e.target.value);
-                      atualizarCampo('estado', e.target.value);
-                    }}
+                    value={cotacaoLocal.estado || ""}
+                    onChange={(e) => atualizarCampo('estado', e.target.value)}
                     placeholder="Estado"
                   />
                 </div>
               </div>
             ) : (
               <div className="flex items-center gap-2 mb-1 text-sm">
-                <span className="font-medium">Local:</span> {item.cidade} - {item.estado}
+                <span className="font-medium">Local:</span> {cotacaoLocal.cidade} - {cotacaoLocal.estado}
               </div>
             )}
             
@@ -116,29 +174,23 @@ const HistoricoItem = ({
                 <div>
                   <label className="text-sm font-medium mb-1 block">Fazenda:</label>
                   <Input
-                    value={item.fazenda || ""}
-                    onChange={(e) => {
-                      console.log("Alterando fazenda para:", e.target.value);
-                      atualizarCampo('fazenda', e.target.value);
-                    }}
+                    value={cotacaoLocal.fazenda || ""}
+                    onChange={(e) => atualizarCampo('fazenda', e.target.value)}
                     placeholder="Fazenda"
                   />
                 </div>
                 <div>
                   <label className="text-sm font-medium mb-1 block">CEP:</label>
                   <Input
-                    value={item.cep || ""}
-                    onChange={(e) => {
-                      console.log("Alterando CEP para:", e.target.value);
-                      atualizarCampo('cep', e.target.value);
-                    }}
+                    value={cotacaoLocal.cep || ""}
+                    onChange={(e) => atualizarCampo('cep', e.target.value)}
                     placeholder="CEP"
                   />
                 </div>
               </div>
-            ) : item.fazenda ? (
+            ) : cotacaoLocal.fazenda ? (
               <div className="flex items-center gap-2 mb-1 text-sm">
-                <span className="font-medium">Fazenda:</span> {item.fazenda}
+                <span className="font-medium">Fazenda:</span> {cotacaoLocal.fazenda}
               </div>
             ) : null}
             
@@ -146,17 +198,14 @@ const HistoricoItem = ({
               <div className="mb-3">
                 <label className="text-sm font-medium mb-1 block">Endereço:</label>
                 <Input
-                  value={item.endereco || ""}
-                  onChange={(e) => {
-                    console.log("Alterando endereço para:", e.target.value);
-                    atualizarCampo('endereco', e.target.value);
-                  }}
+                  value={cotacaoLocal.endereco || ""}
+                  onChange={(e) => atualizarCampo('endereco', e.target.value)}
                   placeholder="Endereço"
                 />
               </div>
-            ) : item.endereco ? (
+            ) : cotacaoLocal.endereco ? (
               <div className="flex items-center gap-2 mb-1 text-sm">
-                <span className="font-medium">Endereço:</span> {item.endereco}
+                <span className="font-medium">Endereço:</span> {cotacaoLocal.endereco}
               </div>
             ) : null}
           </div>
@@ -166,52 +215,43 @@ const HistoricoItem = ({
                 <div className="mb-3">
                   <label className="text-sm font-medium mb-1 block">Origem:</label>
                   <Input
-                    value={item.origem || ""}
-                    onChange={(e) => {
-                      console.log("Alterando origem para:", e.target.value);
-                      atualizarCampo('origem', e.target.value);
-                    }}
+                    value={cotacaoLocal.origem || ""}
+                    onChange={(e) => atualizarCampo('origem', e.target.value)}
                     placeholder="Origem"
                   />
                 </div>
                 <div className="mb-3">
                   <label className="text-sm font-medium mb-1 block">Destino:</label>
                   <Input
-                    value={item.destino || ""}
-                    onChange={(e) => {
-                      console.log("Alterando destino para:", e.target.value);
-                      atualizarCampo('destino', e.target.value);
-                    }}
+                    value={cotacaoLocal.destino || ""}
+                    onChange={(e) => atualizarCampo('destino', e.target.value)}
                     placeholder="Destino"
                   />
                 </div>
                 <div className="mb-3">
                   <label className="text-sm font-medium mb-1 block">Roteiro:</label>
                   <Input
-                    value={item.roteiro || ""}
-                    onChange={(e) => {
-                      console.log("Alterando roteiro para:", e.target.value);
-                      atualizarCampo('roteiro', e.target.value);
-                    }}
+                    value={cotacaoLocal.roteiro || ""}
+                    onChange={(e) => atualizarCampo('roteiro', e.target.value)}
                     placeholder="Roteiro"
                   />
                 </div>
               </>
             ) : (
               <>
-                {item.origem && (
+                {cotacaoLocal.origem && (
                   <div className="flex items-center gap-2 mb-1 text-sm">
-                    <span className="font-medium">Origem:</span> {item.origem}
+                    <span className="font-medium">Origem:</span> {cotacaoLocal.origem}
                   </div>
                 )}
-                {item.destino && (
+                {cotacaoLocal.destino && (
                   <div className="flex items-center gap-2 mb-1 text-sm">
-                    <span className="font-medium">Destino:</span> {item.destino}
+                    <span className="font-medium">Destino:</span> {cotacaoLocal.destino}
                   </div>
                 )}
-                {item.roteiro && (
+                {cotacaoLocal.roteiro && (
                   <div className="flex items-center gap-2 mb-1 text-sm">
-                    <span className="font-medium">Roteiro:</span> {item.roteiro}
+                    <span className="font-medium">Roteiro:</span> {cotacaoLocal.roteiro}
                   </div>
                 )}
               </>
@@ -230,43 +270,31 @@ const HistoricoItem = ({
             <div className="mt-2 bg-muted/20 rounded-md p-3">
               {modoEdicao ? (
                 <div className="space-y-3">
-                  {item.produtos.map((produto, idx) => (
+                  {cotacaoLocal.produtos.map((produto, idx) => (
                     <div key={idx} className="flex items-center gap-2 p-1 bg-background rounded-md border p-2">
                       <Input
                         value={produto.nome || ""}
-                        onChange={(e) => {
-                          console.log("Alterando produto nome:", idx, e.target.value);
-                          atualizarProduto(idx, 'nome', e.target.value);
-                        }}
+                        onChange={(e) => atualizarProduto(idx, 'nome', e.target.value)}
                         placeholder="Nome do produto"
                         className="flex-grow"
                       />
                       <Input
                         type="number"
                         value={produto.quantidade || 1}
-                        onChange={(e) => {
-                          console.log("Alterando produto quantidade:", idx, e.target.value);
-                          atualizarProduto(idx, 'quantidade', Number(e.target.value));
-                        }}
+                        onChange={(e) => atualizarProduto(idx, 'quantidade', Number(e.target.value))}
                         placeholder="Qtd"
                         className="w-20"
                         min="1"
                       />
                       <Input
                         value={produto.peso || ""}
-                        onChange={(e) => {
-                          console.log("Alterando produto peso:", idx, e.target.value);
-                          atualizarProduto(idx, 'peso', e.target.value);
-                        }}
+                        onChange={(e) => atualizarProduto(idx, 'peso', e.target.value)}
                         placeholder="Peso"
                         className="w-24"
                       />
                       <Input
                         value={produto.embalagem || ""}
-                        onChange={(e) => {
-                          console.log("Alterando produto embalagem:", idx, e.target.value);
-                          atualizarProduto(idx, 'embalagem', e.target.value);
-                        }}
+                        onChange={(e) => atualizarProduto(idx, 'embalagem', e.target.value)}
                         placeholder="Embalagem"
                         className="w-32"
                       />
@@ -274,7 +302,7 @@ const HistoricoItem = ({
                         variant="destructive" 
                         size="icon" 
                         onClick={() => removerProduto(idx)}
-                        disabled={item.produtos.length <= 1}
+                        disabled={cotacaoLocal.produtos.length <= 1}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -290,7 +318,7 @@ const HistoricoItem = ({
                 </div>
               ) : (
                 <ul className="space-y-1 text-sm">
-                  {item.produtos.map((produto, idx) => (
+                  {cotacaoLocal.produtos.map((produto, idx) => (
                     <li key={idx} className="flex items-center gap-2 p-1">
                       <span className="font-medium">{produto.nome}</span>
                       <span className="text-xs bg-secondary px-2 py-0.5 rounded-full">
@@ -322,7 +350,7 @@ const HistoricoItem = ({
           Cotações de transportadoras:
         </h4>
         <div className="space-y-3 max-h-[400px] overflow-y-auto pr-2">
-          {item.transportadoras.map((transp, idx) => (
+          {cotacaoLocal.transportadoras.map((transp, idx) => (
             <div
               key={idx}
               className="p-3 rounded-md bg-muted/30 border border-muted"
@@ -331,10 +359,7 @@ const HistoricoItem = ({
                 {modoEdicao ? (
                   <Input
                     value={transp.nome || ""}
-                    onChange={(e) => {
-                      console.log("Alterando transportadora nome:", idx, e.target.value);
-                      atualizarTransportadora(idx, "nome", e.target.value);
-                    }}
+                    onChange={(e) => atualizarTransportadora(idx, "nome", e.target.value)}
                     placeholder="Nome da transportadora"
                     className="sm:max-w-[200px]"
                   />
@@ -353,10 +378,7 @@ const HistoricoItem = ({
                     <Input
                       className="h-8"
                       value={transp.prazo || ""}
-                      onChange={(e) => {
-                        console.log("Alterando transportadora prazo:", idx, e.target.value);
-                        atualizarTransportadora(idx, "prazo", e.target.value);
-                      }}
+                      onChange={(e) => atualizarTransportadora(idx, "prazo", e.target.value)}
                       placeholder="Prazo"
                     />
                   ) : (
@@ -372,10 +394,7 @@ const HistoricoItem = ({
                     <Input
                       className="h-8"
                       value={transp.valorUnitario || ""}
-                      onChange={(e) => {
-                        console.log("Alterando transportadora valorUnitario:", idx, e.target.value);
-                        atualizarTransportadora(idx, "valorUnitario", e.target.value);
-                      }}
+                      onChange={(e) => atualizarTransportadora(idx, "valorUnitario", e.target.value)}
                       placeholder="Valor unitário"
                     />
                   ) : (
@@ -391,10 +410,7 @@ const HistoricoItem = ({
                     <Input
                       className="h-8"
                       value={transp.valorTotal || ""}
-                      onChange={(e) => {
-                        console.log("Alterando transportadora valorTotal:", idx, e.target.value);
-                        atualizarTransportadora(idx, "valorTotal", e.target.value);
-                      }}
+                      onChange={(e) => atualizarTransportadora(idx, "valorTotal", e.target.value)}
                       placeholder="Valor total"
                     />
                   ) : (
@@ -406,60 +422,29 @@ const HistoricoItem = ({
                 
                 <div className="bg-background rounded p-2">
                   <span className="text-xs text-muted-foreground block mb-1">Proposta Final:</span>
-                  {modoEdicao ? (
-                    <Input
-                      className="h-8"
-                      value={transp.propostaFinal || ""}
-                      onChange={(e) => {
-                        console.log("Alterando transportadora propostaFinal:", idx, e.target.value);
-                        atualizarTransportadora(idx, "propostaFinal", e.target.value);
-                      }}
-                      placeholder="Proposta final"
-                    />
-                  ) : (
-                    <Input
-                      className="h-8"
-                      value={transp.propostaFinal || ""}
-                      onChange={(e) => atualizarPropostaFinal(idx, e.target.value)}
-                      placeholder="Proposta final"
-                    />
-                  )}
+                  <Input
+                    className="h-8"
+                    value={transp.propostaFinal || ""}
+                    onChange={(e) => atualizarTransportadora(idx, "propostaFinal", e.target.value)}
+                    placeholder="Proposta final"
+                  />
                 </div>
                 
                 <div className="bg-background rounded p-2">
                   <span className="text-xs text-muted-foreground block mb-1">Status:</span>
-                  {modoEdicao ? (
-                    <Select 
-                      value={transp.status || "Pendente"}
-                      onValueChange={(value) => {
-                        console.log("Alterando transportadora status:", idx, value);
-                        atualizarTransportadora(idx, "status", value);
-                      }}
-                    >
-                      <SelectTrigger className="h-8">
-                        <SelectValue placeholder="Status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Pendente">Pendente</SelectItem>
-                        <SelectItem value="Aprovado">Aprovado</SelectItem>
-                        <SelectItem value="Recusado">Recusado</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  ) : (
-                    <Select 
-                      value={transp.status || "Pendente"}
-                      onValueChange={(value) => atualizarStatus(idx, value)}
-                    >
-                      <SelectTrigger className="h-8">
-                        <SelectValue placeholder="Status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="Pendente">Pendente</SelectItem>
-                        <SelectItem value="Aprovado">Aprovado</SelectItem>
-                        <SelectItem value="Recusado">Recusado</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )}
+                  <Select 
+                    value={transp.status || "Pendente"}
+                    onValueChange={(value) => atualizarTransportadora(idx, "status", value)}
+                  >
+                    <SelectTrigger className="h-8">
+                      <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Pendente">Pendente</SelectItem>
+                      <SelectItem value="Aprovado">Aprovado</SelectItem>
+                      <SelectItem value="Recusado">Recusado</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             </div>
@@ -472,19 +457,16 @@ const HistoricoItem = ({
         <div className="mb-4">
           <h4 className="text-sm font-medium mb-1">Observações:</h4>
           <Textarea
-            value={item.observacoes || ""}
-            onChange={(e) => {
-              console.log("Alterando observações para:", e.target.value);
-              atualizarCampo('observacoes', e.target.value);
-            }}
+            value={cotacaoLocal.observacoes || ""}
+            onChange={(e) => atualizarCampo('observacoes', e.target.value)}
             placeholder="Observações"
             className="min-h-[100px]"
           />
         </div>
-      ) : item.observacoes ? (
+      ) : cotacaoLocal.observacoes ? (
         <div className="mb-4 bg-muted/20 p-3 rounded-md">
           <h4 className="text-sm font-medium mb-1">Observações:</h4>
-          <p className="text-sm">{item.observacoes}</p>
+          <p className="text-sm">{cotacaoLocal.observacoes}</p>
         </div>
       ) : null}
 
@@ -492,7 +474,7 @@ const HistoricoItem = ({
       <div className="flex flex-wrap gap-2 mt-4">
         {modoEdicao ? (
           <>
-            <Button onClick={salvarEdicao} size="sm" className="gap-1">
+            <Button onClick={handleSalvar} size="sm" className="gap-1">
               <Save className="h-4 w-4" />
               Salvar
             </Button>
