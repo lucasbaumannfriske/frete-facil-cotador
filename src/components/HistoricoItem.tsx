@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import {
   Accordion,
@@ -51,6 +52,9 @@ const HistoricoItem = ({
   removerProduto,
   atualizarPropostaFinal,
 }: HistoricoItemProps) => {
+
+  console.log("HistoricoItem - modoEdicao:", modoEdicao, "item:", item);
+
   return (
     <div className="p-4">
       {/* Detalhes do cliente */}
@@ -62,7 +66,10 @@ const HistoricoItem = ({
                 <label className="text-sm font-medium mb-1 block">Cliente:</label>
                 <Input
                   value={item.cliente || ""}
-                  onChange={(e) => atualizarCampo('cliente', e.target.value)}
+                  onChange={(e) => {
+                    console.log("Alterando cliente para:", e.target.value);
+                    atualizarCampo('cliente', e.target.value);
+                  }}
                   placeholder="Nome do cliente"
                   className="w-full"
                 />
@@ -79,7 +86,10 @@ const HistoricoItem = ({
                   <label className="text-sm font-medium mb-1 block">Cidade:</label>
                   <Input
                     value={item.cidade || ""}
-                    onChange={(e) => atualizarCampo('cidade', e.target.value)}
+                    onChange={(e) => {
+                      console.log("Alterando cidade para:", e.target.value);
+                      atualizarCampo('cidade', e.target.value);
+                    }}
                     placeholder="Cidade"
                   />
                 </div>
@@ -87,7 +97,10 @@ const HistoricoItem = ({
                   <label className="text-sm font-medium mb-1 block">Estado:</label>
                   <Input
                     value={item.estado || ""}
-                    onChange={(e) => atualizarCampo('estado', e.target.value)}
+                    onChange={(e) => {
+                      console.log("Alterando estado para:", e.target.value);
+                      atualizarCampo('estado', e.target.value);
+                    }}
                     placeholder="Estado"
                   />
                 </div>
@@ -104,7 +117,10 @@ const HistoricoItem = ({
                   <label className="text-sm font-medium mb-1 block">Fazenda:</label>
                   <Input
                     value={item.fazenda || ""}
-                    onChange={(e) => atualizarCampo('fazenda', e.target.value)}
+                    onChange={(e) => {
+                      console.log("Alterando fazenda para:", e.target.value);
+                      atualizarCampo('fazenda', e.target.value);
+                    }}
                     placeholder="Fazenda"
                   />
                 </div>
@@ -112,7 +128,10 @@ const HistoricoItem = ({
                   <label className="text-sm font-medium mb-1 block">CEP:</label>
                   <Input
                     value={item.cep || ""}
-                    onChange={(e) => atualizarCampo('cep', e.target.value)}
+                    onChange={(e) => {
+                      console.log("Alterando CEP para:", e.target.value);
+                      atualizarCampo('cep', e.target.value);
+                    }}
                     placeholder="CEP"
                   />
                 </div>
@@ -128,7 +147,10 @@ const HistoricoItem = ({
                 <label className="text-sm font-medium mb-1 block">Endereço:</label>
                 <Input
                   value={item.endereco || ""}
-                  onChange={(e) => atualizarCampo('endereco', e.target.value)}
+                  onChange={(e) => {
+                    console.log("Alterando endereço para:", e.target.value);
+                    atualizarCampo('endereco', e.target.value);
+                  }}
                   placeholder="Endereço"
                 />
               </div>
@@ -145,7 +167,10 @@ const HistoricoItem = ({
                   <label className="text-sm font-medium mb-1 block">Origem:</label>
                   <Input
                     value={item.origem || ""}
-                    onChange={(e) => atualizarCampo('origem', e.target.value)}
+                    onChange={(e) => {
+                      console.log("Alterando origem para:", e.target.value);
+                      atualizarCampo('origem', e.target.value);
+                    }}
                     placeholder="Origem"
                   />
                 </div>
@@ -153,7 +178,10 @@ const HistoricoItem = ({
                   <label className="text-sm font-medium mb-1 block">Destino:</label>
                   <Input
                     value={item.destino || ""}
-                    onChange={(e) => atualizarCampo('destino', e.target.value)}
+                    onChange={(e) => {
+                      console.log("Alterando destino para:", e.target.value);
+                      atualizarCampo('destino', e.target.value);
+                    }}
                     placeholder="Destino"
                   />
                 </div>
@@ -161,7 +189,10 @@ const HistoricoItem = ({
                   <label className="text-sm font-medium mb-1 block">Roteiro:</label>
                   <Input
                     value={item.roteiro || ""}
-                    onChange={(e) => atualizarCampo('roteiro', e.target.value)}
+                    onChange={(e) => {
+                      console.log("Alterando roteiro para:", e.target.value);
+                      atualizarCampo('roteiro', e.target.value);
+                    }}
                     placeholder="Roteiro"
                   />
                 </div>
@@ -203,27 +234,39 @@ const HistoricoItem = ({
                     <div key={idx} className="flex items-center gap-2 p-1 bg-background rounded-md border p-2">
                       <Input
                         value={produto.nome || ""}
-                        onChange={(e) => atualizarProduto(idx, 'nome', e.target.value)}
+                        onChange={(e) => {
+                          console.log("Alterando produto nome:", idx, e.target.value);
+                          atualizarProduto(idx, 'nome', e.target.value);
+                        }}
                         placeholder="Nome do produto"
                         className="flex-grow"
                       />
                       <Input
                         type="number"
                         value={produto.quantidade || 1}
-                        onChange={(e) => atualizarProduto(idx, 'quantidade', Number(e.target.value))}
+                        onChange={(e) => {
+                          console.log("Alterando produto quantidade:", idx, e.target.value);
+                          atualizarProduto(idx, 'quantidade', Number(e.target.value));
+                        }}
                         placeholder="Qtd"
                         className="w-20"
                         min="1"
                       />
                       <Input
                         value={produto.peso || ""}
-                        onChange={(e) => atualizarProduto(idx, 'peso', e.target.value)}
+                        onChange={(e) => {
+                          console.log("Alterando produto peso:", idx, e.target.value);
+                          atualizarProduto(idx, 'peso', e.target.value);
+                        }}
                         placeholder="Peso"
                         className="w-24"
                       />
                       <Input
                         value={produto.embalagem || ""}
-                        onChange={(e) => atualizarProduto(idx, 'embalagem', e.target.value)}
+                        onChange={(e) => {
+                          console.log("Alterando produto embalagem:", idx, e.target.value);
+                          atualizarProduto(idx, 'embalagem', e.target.value);
+                        }}
                         placeholder="Embalagem"
                         className="w-32"
                       />
@@ -288,7 +331,10 @@ const HistoricoItem = ({
                 {modoEdicao ? (
                   <Input
                     value={transp.nome || ""}
-                    onChange={(e) => atualizarTransportadora(idx, "nome", e.target.value)}
+                    onChange={(e) => {
+                      console.log("Alterando transportadora nome:", idx, e.target.value);
+                      atualizarTransportadora(idx, "nome", e.target.value);
+                    }}
                     placeholder="Nome da transportadora"
                     className="sm:max-w-[200px]"
                   />
@@ -307,7 +353,10 @@ const HistoricoItem = ({
                     <Input
                       className="h-8"
                       value={transp.prazo || ""}
-                      onChange={(e) => atualizarTransportadora(idx, "prazo", e.target.value)}
+                      onChange={(e) => {
+                        console.log("Alterando transportadora prazo:", idx, e.target.value);
+                        atualizarTransportadora(idx, "prazo", e.target.value);
+                      }}
                       placeholder="Prazo"
                     />
                   ) : (
@@ -323,7 +372,10 @@ const HistoricoItem = ({
                     <Input
                       className="h-8"
                       value={transp.valorUnitario || ""}
-                      onChange={(e) => atualizarTransportadora(idx, "valorUnitario", e.target.value)}
+                      onChange={(e) => {
+                        console.log("Alterando transportadora valorUnitario:", idx, e.target.value);
+                        atualizarTransportadora(idx, "valorUnitario", e.target.value);
+                      }}
                       placeholder="Valor unitário"
                     />
                   ) : (
@@ -339,7 +391,10 @@ const HistoricoItem = ({
                     <Input
                       className="h-8"
                       value={transp.valorTotal || ""}
-                      onChange={(e) => atualizarTransportadora(idx, "valorTotal", e.target.value)}
+                      onChange={(e) => {
+                        console.log("Alterando transportadora valorTotal:", idx, e.target.value);
+                        atualizarTransportadora(idx, "valorTotal", e.target.value);
+                      }}
                       placeholder="Valor total"
                     />
                   ) : (
@@ -355,7 +410,10 @@ const HistoricoItem = ({
                     <Input
                       className="h-8"
                       value={transp.propostaFinal || ""}
-                      onChange={(e) => atualizarTransportadora(idx, "propostaFinal", e.target.value)}
+                      onChange={(e) => {
+                        console.log("Alterando transportadora propostaFinal:", idx, e.target.value);
+                        atualizarTransportadora(idx, "propostaFinal", e.target.value);
+                      }}
                       placeholder="Proposta final"
                     />
                   ) : (
@@ -373,7 +431,10 @@ const HistoricoItem = ({
                   {modoEdicao ? (
                     <Select 
                       value={transp.status || "Pendente"}
-                      onValueChange={(value) => atualizarTransportadora(idx, "status", value)}
+                      onValueChange={(value) => {
+                        console.log("Alterando transportadora status:", idx, value);
+                        atualizarTransportadora(idx, "status", value);
+                      }}
                     >
                       <SelectTrigger className="h-8">
                         <SelectValue placeholder="Status" />
@@ -412,7 +473,10 @@ const HistoricoItem = ({
           <h4 className="text-sm font-medium mb-1">Observações:</h4>
           <Textarea
             value={item.observacoes || ""}
-            onChange={(e) => atualizarCampo('observacoes', e.target.value)}
+            onChange={(e) => {
+              console.log("Alterando observações para:", e.target.value);
+              atualizarCampo('observacoes', e.target.value);
+            }}
             placeholder="Observações"
             className="min-h-[100px]"
           />
