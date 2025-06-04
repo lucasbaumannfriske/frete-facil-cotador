@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import ClienteForm from "@/components/ClienteForm";
 import ProdutosTable from "@/components/ProdutosTable";
@@ -5,7 +6,7 @@ import TransportadorasTable from "@/components/TransportadorasTable";
 import Observacoes from "@/components/Observacoes";
 import ActionButtons from "@/components/ActionButtons";
 import EmailPreview from "@/components/EmailPreview";
-import Historico from "@/components/Historico";
+import HistoricoCotacoes from "@/components/HistoricoCotacoes";
 import { Produto, Transportadora } from "@/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { PackageIcon, TruckIcon } from "lucide-react";
@@ -225,9 +226,8 @@ const Index = () => {
           <TabsContent value="historico" className="mt-0">
             <Card className="border-t-4 border-t-primary shadow-md">
               <CardContent className="p-6">
-                <Historico 
-                  historico={cotacoes} 
-                  setHistorico={() => {}} // Não usado mais pois é gerenciado pelo hook
+                <HistoricoCotacoes 
+                  cotacoes={cotacoes} 
                   loading={loading}
                 />
               </CardContent>
