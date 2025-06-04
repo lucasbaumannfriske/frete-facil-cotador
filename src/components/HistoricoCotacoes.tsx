@@ -41,6 +41,14 @@ const HistoricoCotacoes = ({ cotacoes, loading = false }: HistoricoCotacoesProps
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editData, setEditData] = useState<CotacaoSalva | null>(null);
+  
+  // Estado local para armazenar cotações atualizadas
+  const [localCotacoes, setLocalCotacoes] = useState<CotacaoSalva[]>(cotacoes);
+
+  // Atualizar estado local quando as props mudarem
+  React.useEffect(() => {
+    setLocalCotacoes(cotacoes);
+  }, [cotacoes]);
 
   const toggleExpand = (id: string) => {
     setExpandedItems(prev => 
@@ -68,14 +76,24 @@ const HistoricoCotacoes = ({ cotacoes, loading = false }: HistoricoCotacoesProps
 
     const sucesso = await atualizarCotacao(editData);
     if (sucesso) {
+      // Atualizar o estado local imediatamente
+      setLocalCotacoes(prev => 
+        prev.map(cotacao => 
+          cotacao.id === editData.id ? editData : cotacao
+        )
+      );
+      
       setEditingId(null);
       setEditData(null);
+      console.log('Cotação atualizada localmente:', editData);
     }
   };
 
   const deleteCotacao = async (id: string) => {
     const sucesso = await deletarCotacao(id);
     if (sucesso) {
+      // Atualizar o estado local imediatamente
+      setLocalCotacoes(prev => prev.filter(cotacao => cotacao.id !== id));
       setExpandedItems(prev => prev.filter(item => item !== id));
     }
   };
@@ -136,7 +154,7 @@ const HistoricoCotacoes = ({ cotacoes, loading = false }: HistoricoCotacoesProps
       </div>
       
       <ScrollArea className="h-[600px] pr-4">
-        {cotacoes.length === 0 ? (
+        {localCotacoes.length === 0 ? (
           <div className="text-center py-12 bg-muted/20 rounded-lg border border-dashed">
             <TruckIcon className="h-12 w-12 text-muted-foreground mx-auto mb-3 opacity-50" />
             <p className="text-muted-foreground">
@@ -148,7 +166,7 @@ const HistoricoCotacoes = ({ cotacoes, loading = false }: HistoricoCotacoesProps
           </div>
         ) : (
           <div className="space-y-3">
-            {cotacoes.map((cotacao) => {
+            {localCotacoes.map((cotacao) => {
               const isEditing = editingId === cotacao.id;
               const currentData = isEditing ? editData! : cotacao;
               
@@ -384,28 +402,38 @@ const HistoricoCotacoes = ({ cotacoes, loading = false }: HistoricoCotacoesProps
                               
                               <div>
                                 <label className="text-xs text-muted-foreground">Proposta Final:</label>
-                                <Input
-                                  value={transp.propostaFinal || ""}
-                                  onChange={(e) => updateTransportadora(idx, 'propostaFinal', e.target.value)}
-                                  className="mt-1"
-                                />
+                                {isEditing ? (
+                                  <Input
+                                    value={transp.propostaFinal || ""}
+                                    onChange={(e) => updateTransportadora(idx, 'propostaFinal', e.target.value)}
+                                    className="mt-1"
+                                  />
+                                ) : (
+                                  <p className="mt-1 text-sm">{transp.propostaFinal || "N/A"}</p>
+                                )}
                               </div>
                               
                               <div>
                                 <label className="text-xs text-muted-foreground">Status:</label>
-                                <Select 
-                                  value={transp.status || "Pendente"}
-                                  onValueChange={(value) => updateTransportadora(idx, 'status', value)}
-                                >
-                                  <SelectTrigger className="mt-1">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="Pendente">Pendente</SelectItem>
-                                    <SelectItem value="Aprovado">Aprovado</SelectItem>
-                                    <SelectItem value="Recusado">Recusado</SelectItem>
-                                  </SelectContent>
-                                </Select>
+                                {isEditing ? (
+                                  <Select 
+                                    value={transp.status || "Pendente"}
+                                    onValueChange={(value) => updateTransportadora(idx, 'status', value)}
+                                  >
+                                    <SelectTrigger className="mt-1">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="Pendente">Pendente</SelectItem>
+                                      <SelectItem value="Aprovado">Aprovado</SelectItem>
+                                      <SelectItem value="Recusado">Recusado</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                ) : (
+                                  <div className="mt-1">
+                                    <StatusBadge status={transp.status || "Pendente"} />
+                                  </div>
+                                )}
                               </div>
                             </div>
                           </div>
