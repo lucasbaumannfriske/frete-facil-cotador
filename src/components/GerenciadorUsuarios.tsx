@@ -4,13 +4,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { UserPlus, UserX, User } from "lucide-react";
+import { UserPlus, UserX, User, Mail, Lock } from "lucide-react";
 
 type Usuario = {
   nome: string;
   email: string;
-  senha?: string; // Adicionando senha ao tipo
+  senha?: string;
 };
 
 const GerenciadorUsuarios = () => {
@@ -81,98 +82,147 @@ const GerenciadorUsuarios = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-2 mb-4">
-        <User className="h-5 w-5 text-primary" />
-        <h2 className="text-xl font-bold">Gerenciador de Usuários</h2>
+      <div className="flex items-center gap-3 mb-6">
+        <div className="p-2 bg-primary/10 rounded-lg">
+          <User className="h-6 w-6 text-primary" />
+        </div>
+        <div>
+          <h2 className="text-2xl font-bold">Gerenciamento de Usuários</h2>
+          <p className="text-muted-foreground">Adicione e gerencie usuários do sistema</p>
+        </div>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid lg:grid-cols-2 gap-6">
         {/* Lista de usuários */}
-        <div>
-          <h3 className="text-lg font-medium mb-3">Usuários Cadastrados</h3>
-          <ScrollArea className="h-[260px] border rounded-md p-4">
-            {usuarios.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                Nenhum usuário cadastrado
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {usuarios.map((user, index) => (
-                  <div key={user.email} className="flex items-center justify-between py-2">
-                    <div className="flex flex-col">
-                      <span className="font-medium">{user.nome}</span>
-                      <span className="text-sm text-muted-foreground">{user.email}</span>
-                    </div>
-                    <Button 
-                      variant="destructive" 
-                      size="sm"
-                      onClick={() => removerUsuario(user.email)}
-                      disabled={user.email === "admin@exemplo.com" || user.email === "lucasfriske@agrofarm.net.br"}
-                    >
-                      <UserX className="h-4 w-4 mr-1" />
-                      Remover
-                    </Button>
-                    {index < usuarios.length - 1 && <Separator className="mt-2" />}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <User className="h-5 w-5" />
+              Usuários Cadastrados ({usuarios.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="h-[400px]">
+              {usuarios.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <div className="p-3 bg-muted rounded-full mb-3">
+                    <User className="h-8 w-8 text-muted-foreground" />
                   </div>
-                ))}
-              </div>
-            )}
-          </ScrollArea>
-        </div>
+                  <p className="text-muted-foreground">Nenhum usuário cadastrado</p>
+                  <p className="text-sm text-muted-foreground">Adicione o primeiro usuário ao lado</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {usuarios.map((user, index) => (
+                    <div key={user.email}>
+                      <div className="flex items-center justify-between p-3 rounded-lg border bg-card hover:bg-muted/50 transition-colors">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2 bg-primary/10 rounded-full">
+                            <User className="h-4 w-4 text-primary" />
+                          </div>
+                          <div>
+                            <p className="font-medium">{user.nome}</p>
+                            <p className="text-sm text-muted-foreground flex items-center gap-1">
+                              <Mail className="h-3 w-3" />
+                              {user.email}
+                            </p>
+                          </div>
+                        </div>
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => removerUsuario(user.email)}
+                          disabled={user.email === "admin@exemplo.com" || user.email === "lucasfriske@agrofarm.net.br"}
+                          className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                        >
+                          <UserX className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      {index < usuarios.length - 1 && <Separator className="my-2" />}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </ScrollArea>
+          </CardContent>
+        </Card>
 
         {/* Formulário para adicionar usuário */}
-        <div>
-          <h3 className="text-lg font-medium mb-3">Adicionar Novo Usuário</h3>
-          <form onSubmit={adicionarUsuario} className="border rounded-md p-4 space-y-4">
-            <div className="space-y-1">
-              <label htmlFor="nome" className="text-sm font-medium">Nome completo</label>
-              <Input 
-                id="nome" 
-                value={nome} 
-                onChange={(e) => setNome(e.target.value)} 
-                placeholder="Nome do usuário"
-              />
-            </div>
-            
-            <div className="space-y-1">
-              <label htmlFor="email" className="text-sm font-medium">Email</label>
-              <Input 
-                id="email" 
-                type="email" 
-                value={email} 
-                onChange={(e) => setEmail(e.target.value)} 
-                placeholder="email@exemplo.com"
-              />
-            </div>
-            
-            <div className="space-y-1">
-              <label htmlFor="senha" className="text-sm font-medium">Senha</label>
-              <Input 
-                id="senha" 
-                type="password" 
-                value={senha} 
-                onChange={(e) => setSenha(e.target.value)}
-                placeholder="Mínimo 6 caracteres" 
-              />
-            </div>
-            
-            <div className="space-y-1">
-              <label htmlFor="confirmSenha" className="text-sm font-medium">Confirme a senha</label>
-              <Input 
-                id="confirmSenha" 
-                type="password" 
-                value={confirmSenha} 
-                onChange={(e) => setConfirmSenha(e.target.value)}
-                placeholder="Confirme a senha" 
-              />
-            </div>
-            
-            <Button type="submit" className="w-full">
-              <UserPlus className="h-4 w-4 mr-2" />
-              Adicionar Usuário
-            </Button>
-          </form>
-        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <UserPlus className="h-5 w-5" />
+              Adicionar Novo Usuário
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={adicionarUsuario} className="space-y-4">
+              <div className="space-y-2">
+                <label htmlFor="nome" className="text-sm font-medium flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  Nome completo
+                </label>
+                <Input 
+                  id="nome" 
+                  value={nome} 
+                  onChange={(e) => setNome(e.target.value)} 
+                  placeholder="Digite o nome completo"
+                  className="h-11"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label htmlFor="email" className="text-sm font-medium flex items-center gap-2">
+                  <Mail className="h-4 w-4" />
+                  Email
+                </label>
+                <Input 
+                  id="email" 
+                  type="email" 
+                  value={email} 
+                  onChange={(e) => setEmail(e.target.value)} 
+                  placeholder="usuario@exemplo.com"
+                  className="h-11"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label htmlFor="senha" className="text-sm font-medium flex items-center gap-2">
+                  <Lock className="h-4 w-4" />
+                  Senha
+                </label>
+                <Input 
+                  id="senha" 
+                  type="password" 
+                  value={senha} 
+                  onChange={(e) => setSenha(e.target.value)}
+                  placeholder="Mínimo 6 caracteres"
+                  className="h-11"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label htmlFor="confirmSenha" className="text-sm font-medium flex items-center gap-2">
+                  <Lock className="h-4 w-4" />
+                  Confirme a senha
+                </label>
+                <Input 
+                  id="confirmSenha" 
+                  type="password" 
+                  value={confirmSenha} 
+                  onChange={(e) => setConfirmSenha(e.target.value)}
+                  placeholder="Digite a senha novamente"
+                  className="h-11"
+                />
+              </div>
+              
+              <Button type="submit" className="w-full h-11 mt-6">
+                <UserPlus className="h-4 w-4 mr-2" />
+                Adicionar Usuário
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
