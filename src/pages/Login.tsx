@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { TruckIcon, LogIn } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -14,7 +15,7 @@ const Login = () => {
   
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!email || !senha) {
@@ -24,38 +25,56 @@ const Login = () => {
 
     setLoading(true);
     
-    // Simular login - no futuro, isto seria substituído por uma conexão com backend/supabase
-    setTimeout(() => {
-      // Verificar usuários pré-cadastrados primeiro
-      if ((email === "admin@exemplo.com" && senha === "12345") || 
-          (email === "lucasfriske@agrofarm.net.br" && senha === "Nexus@4202")) {
+    try {
+      // Tentar login com Supabase Auth
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password: senha,
+      });
+
+      if (error) {
+        // Se falhar, verificar usuários pré-cadastrados para compatibilidade
+        if ((email === "admin@exemplo.com" && senha === "12345") || 
+            (email === "lucasfriske@agrofarm.net.br" && senha === "Nexus@4202")) {
+          
+          const nome = email === "admin@exemplo.com" ? "Administrador" : "Lucas Friske";
+          localStorage.setItem("usuarioLogado", JSON.stringify({ email, nome }));
+          toast.success("Login realizado com sucesso!");
+          navigate("/");
+          return;
+        }
         
-        // Determina o nome baseado no email
-        const nome = email === "admin@exemplo.com" ? "Administrador" : "Lucas Friske";
-        
-        localStorage.setItem("usuarioLogado", JSON.stringify({ email, nome }));
+        throw error;
+      }
+
+      if (data.user) {
+        // Login com Supabase bem-sucedido
+        const nome = data.user.user_metadata?.nome || data.user.email?.split('@')[0] || "Usuário";
+        localStorage.setItem("usuarioLogado", JSON.stringify({ 
+          email: data.user.email, 
+          nome,
+          id: data.user.id 
+        }));
         toast.success("Login realizado com sucesso!");
         navigate("/");
-        setLoading(false);
-        return;
       }
+    } catch (error: any) {
+      console.error('Erro no login:', error);
       
-      // Verificar usuários cadastrados no sistema
+      // Verificar usuários pré-cadastrados como fallback
       const usuarios = JSON.parse(localStorage.getItem("usuarios") || "[]");
       const usuarioEncontrado = usuarios.find((user: any) => user.email === email);
       
       if (usuarioEncontrado) {
-        // Para usuários cadastrados, vamos aceitar qualquer senha por simplicidade
-        // Em um sistema real, a senha seria verificada contra um hash
         localStorage.setItem("usuarioLogado", JSON.stringify({ email, nome: usuarioEncontrado.nome }));
         toast.success("Login realizado com sucesso!");
         navigate("/");
       } else {
         toast.error("Email ou senha incorretos");
       }
-      
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   return (

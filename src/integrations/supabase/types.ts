@@ -95,6 +95,33 @@ export type Database = {
           },
         ]
       }
+      system_users: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          email: string
+          id: string
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          email: string
+          id?: string
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          email?: string
+          id?: string
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       transportadoras: {
         Row: {
           cotacao_id: string
