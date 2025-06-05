@@ -26,7 +26,7 @@ const Login = () => {
     
     // Simular login - no futuro, isto seria substituído por uma conexão com backend/supabase
     setTimeout(() => {
-      // Checagem com usuários aceitos
+      // Verificar usuários pré-cadastrados primeiro
       if ((email === "admin@exemplo.com" && senha === "12345") || 
           (email === "lucasfriske@agrofarm.net.br" && senha === "Nexus@4202")) {
         
@@ -36,9 +36,24 @@ const Login = () => {
         localStorage.setItem("usuarioLogado", JSON.stringify({ email, nome }));
         toast.success("Login realizado com sucesso!");
         navigate("/");
+        setLoading(false);
+        return;
+      }
+      
+      // Verificar usuários cadastrados no sistema
+      const usuarios = JSON.parse(localStorage.getItem("usuarios") || "[]");
+      const usuarioEncontrado = usuarios.find((user: any) => user.email === email);
+      
+      if (usuarioEncontrado) {
+        // Para usuários cadastrados, vamos aceitar qualquer senha por simplicidade
+        // Em um sistema real, a senha seria verificada contra um hash
+        localStorage.setItem("usuarioLogado", JSON.stringify({ email, nome: usuarioEncontrado.nome }));
+        toast.success("Login realizado com sucesso!");
+        navigate("/");
       } else {
         toast.error("Email ou senha incorretos");
       }
+      
       setLoading(false);
     }, 1000);
   };

@@ -10,6 +10,7 @@ import { UserPlus, UserX, User } from "lucide-react";
 type Usuario = {
   nome: string;
   email: string;
+  senha?: string; // Adicionando senha ao tipo
 };
 
 const GerenciadorUsuarios = () => {
@@ -50,8 +51,8 @@ const GerenciadorUsuarios = () => {
       return;
     }
 
-    // Adicionar novo usuário
-    const novosUsuarios = [...usuarios, { nome, email }];
+    // Adicionar novo usuário com senha
+    const novosUsuarios = [...usuarios, { nome, email, senha }];
     setUsuarios(novosUsuarios);
     localStorage.setItem("usuarios", JSON.stringify(novosUsuarios));
     
