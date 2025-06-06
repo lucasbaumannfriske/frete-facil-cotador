@@ -30,6 +30,7 @@ const GerenciadorUsuarios = () => {
   const { data: systemUsers = [], isLoading } = useQuery({
     queryKey: ['system-users'],
     queryFn: async () => {
+      console.log('Buscando usuários do sistema...');
       const { data, error } = await supabase
         .from('system_users')
         .select('*')
@@ -40,16 +41,68 @@ const GerenciadorUsuarios = () => {
         throw error;
       }
       
+      console.log('Usuários encontrados:', data);
       return data as SystemUser[];
     }
   });
+
+  // Verificar e sincronizar usuário atual
+  useEffect(() => {
+    const syncCurrentUser = async () => {
+      try {
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
+        
+        if (currentUser) {
+          console.log('Usuário atual:', currentUser);
+          
+          // Verificar se o usuário atual já existe na tabela system_users
+          const { data: existingUser } = await supabase
+            .from('system_users')
+            .select('*')
+            .eq('email', currentUser.email)
+            .single();
+
+          if (!existingUser) {
+            console.log('Adicionando usuário atual à tabela system_users...');
+            
+            // Adicionar o usuário atual à tabela system_users
+            const { error: insertError } = await supabase
+              .from('system_users')
+              .insert({
+                nome: currentUser.user_metadata?.nome || currentUser.email?.split('@')[0] || 'Usuário',
+                email: currentUser.email!,
+                created_by: currentUser.id
+              });
+
+            if (insertError) {
+              console.error('Erro ao sincronizar usuário atual:', insertError);
+            } else {
+              console.log('Usuário atual sincronizado com sucesso');
+              queryClient.invalidateQueries({ queryKey: ['system-users'] });
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao sincronizar usuário atual:', error);
+      }
+    };
+
+    syncCurrentUser();
+  }, [queryClient]);
 
   // Mutation para adicionar usuário
   const addUserMutation = useMutation({
     mutationFn: async ({ nome, email, senha }: { nome: string; email: string; senha: string }) => {
       console.log('Tentando criar usuário:', { nome, email });
       
-      // 1. Criar usuário no Supabase Auth
+      // 1. Obter usuário atual autenticado para usar como created_by
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      
+      if (!currentUser) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      // 2. Criar usuário no Supabase Auth usando admin
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password: senha,
@@ -66,13 +119,6 @@ const GerenciadorUsuarios = () => {
       }
 
       console.log('Usuário criado no Auth:', authData);
-
-      // 2. Obter usuário atual autenticado
-      const { data: { user: currentUser } } = await supabase.auth.getUser();
-      
-      if (!currentUser) {
-        throw new Error('Usuário não autenticado');
-      }
 
       // 3. Adicionar à tabela system_users
       const { data: systemUserData, error: systemUserError } = await supabase
@@ -110,6 +156,17 @@ const GerenciadorUsuarios = () => {
   // Mutation para remover usuário
   const removeUserMutation = useMutation({
     mutationFn: async (userId: string) => {
+      // Primeiro, buscar o email do usuário para não permitir remover usuários protegidos
+      const { data: userData } = await supabase
+        .from('system_users')
+        .select('email')
+        .eq('id', userId)
+        .single();
+
+      if (userData?.email === "lucasfriske@agrofarm.net.br") {
+        throw new Error("Não é possível remover este usuário do sistema");
+      }
+
       const { error } = await supabase
         .from('system_users')
         .delete()
@@ -125,7 +182,7 @@ const GerenciadorUsuarios = () => {
     },
     onError: (error: Error) => {
       console.error('Erro ao remover usuário:', error);
-      toast.error("Erro ao remover usuário");
+      toast.error(error.message || "Erro ao remover usuário");
     }
   });
 
@@ -159,9 +216,8 @@ const GerenciadorUsuarios = () => {
 
   // Remover usuário
   const removerUsuario = (userId: string, email: string) => {
-    // Não permitir remover usuários específicos se necessário
-    if (email === "admin@exemplo.com" || email === "lucasfriske@agrofarm.net.br") {
-      toast.error("Não é possível remover usuários do sistema");
+    if (email === "lucasfriske@agrofarm.net.br") {
+      toast.error("Não é possível remover este usuário do sistema");
       return;
     }
     
@@ -224,7 +280,7 @@ const GerenciadorUsuarios = () => {
                           variant="outline" 
                           size="sm"
                           onClick={() => removerUsuario(user.id, user.email)}
-                          disabled={user.email === "admin@exemplo.com" || user.email === "lucasfriske@agrofarm.net.br" || removeUserMutation.isPending}
+                          disabled={user.email === "lucasfriske@agrofarm.net.br" || removeUserMutation.isPending}
                           className="text-destructive hover:text-destructive hover:bg-destructive/10"
                         >
                           <UserX className="h-4 w-4" />

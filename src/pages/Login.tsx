@@ -26,6 +26,8 @@ const Login = () => {
     setLoading(true);
     
     try {
+      console.log('Tentando fazer login com:', email);
+      
       // Tentar login com Supabase Auth
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
@@ -33,45 +35,50 @@ const Login = () => {
       });
 
       if (error) {
-        // Se falhar, verificar usuários pré-cadastrados para compatibilidade
-        if ((email === "admin@exemplo.com" && senha === "12345") || 
-            (email === "lucasfriske@agrofarm.net.br" && senha === "Nexus@4202")) {
-          
-          const nome = email === "admin@exemplo.com" ? "Administrador" : "Lucas Friske";
-          localStorage.setItem("usuarioLogado", JSON.stringify({ email, nome }));
-          toast.success("Login realizado com sucesso!");
-          navigate("/");
-          return;
-        }
-        
+        console.error('Erro no login Supabase:', error);
         throw error;
       }
 
       if (data.user) {
-        // Login com Supabase bem-sucedido
-        const nome = data.user.user_metadata?.nome || data.user.email?.split('@')[0] || "Usuário";
+        console.log('Login bem-sucedido:', data.user);
+        
+        // Verificar se o usuário existe na tabela system_users
+        const { data: systemUser } = await supabase
+          .from('system_users')
+          .select('*')
+          .eq('email', data.user.email)
+          .single();
+
+        if (!systemUser) {
+          // Se não existir, criar entrada na tabela system_users
+          console.log('Criando entrada na tabela system_users...');
+          const { error: insertError } = await supabase
+            .from('system_users')
+            .insert({
+              nome: data.user.user_metadata?.nome || data.user.email?.split('@')[0] || 'Usuário',
+              email: data.user.email!,
+              created_by: data.user.id
+            });
+
+          if (insertError) {
+            console.error('Erro ao criar entrada system_users:', insertError);
+          }
+        }
+
+        // Salvar dados do usuário no localStorage para compatibilidade
+        const nome = systemUser?.nome || data.user.user_metadata?.nome || data.user.email?.split('@')[0] || "Usuário";
         localStorage.setItem("usuarioLogado", JSON.stringify({ 
           email: data.user.email, 
           nome,
           id: data.user.id 
         }));
+        
         toast.success("Login realizado com sucesso!");
         navigate("/");
       }
     } catch (error: any) {
       console.error('Erro no login:', error);
-      
-      // Verificar usuários pré-cadastrados como fallback
-      const usuarios = JSON.parse(localStorage.getItem("usuarios") || "[]");
-      const usuarioEncontrado = usuarios.find((user: any) => user.email === email);
-      
-      if (usuarioEncontrado) {
-        localStorage.setItem("usuarioLogado", JSON.stringify({ email, nome: usuarioEncontrado.nome }));
-        toast.success("Login realizado com sucesso!");
-        navigate("/");
-      } else {
-        toast.error("Email ou senha incorretos");
-      }
+      toast.error(error.message || "Email ou senha incorretos");
     } finally {
       setLoading(false);
     }
