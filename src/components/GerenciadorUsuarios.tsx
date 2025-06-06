@@ -102,7 +102,7 @@ const GerenciadorUsuarios = () => {
         throw new Error('Usuário não autenticado');
       }
 
-      // 2. Criar usuário no Supabase Auth com email_confirm: true
+      // 2. Criar usuário no Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password: senha,
@@ -110,7 +110,7 @@ const GerenciadorUsuarios = () => {
           data: {
             nome: nome
           },
-          emailRedirectTo: undefined // Remove redirecionamento de email
+          emailRedirectTo: undefined
         }
       });
 
@@ -121,17 +121,7 @@ const GerenciadorUsuarios = () => {
 
       console.log('Usuário criado no Auth:', authData);
 
-      // 3. Se o usuário foi criado, confirmar o email automaticamente
-      if (authData.user && !authData.user.email_confirmed_at) {
-        console.log('Confirmando email do usuário automaticamente...');
-        
-        // Note: Infelizmente, não podemos confirmar emails via JavaScript client
-        // O usuário precisará confirmar via email ou você pode desabilitar 
-        // a confirmação de email nas configurações do Supabase
-        console.log('Usuário criado mas precisa confirmar email. Considere desabilitar confirmação de email no Supabase.');
-      }
-
-      // 4. Adicionar à tabela system_users
+      // 3. Adicionar à tabela system_users
       const { data: systemUserData, error: systemUserError } = await supabase
         .from('system_users')
         .insert([{
@@ -156,7 +146,7 @@ const GerenciadorUsuarios = () => {
       setEmail("");
       setSenha("");
       setConfirmSenha("");
-      toast.success("Usuário adicionado com sucesso! IMPORTANTE: O usuário precisa confirmar o email antes de fazer login, ou desabilite a confirmação de email nas configurações do Supabase.");
+      toast.success("Usuário adicionado com sucesso!");
     },
     onError: (error: Error) => {
       console.error('Erro ao adicionar usuário:', error);
@@ -244,21 +234,6 @@ const GerenciadorUsuarios = () => {
         <div>
           <h2 className="text-2xl font-bold">Gerenciamento de Usuários</h2>
           <p className="text-muted-foreground">Adicione e gerencie usuários do sistema</p>
-        </div>
-      </div>
-
-      {/* Banner de aviso sobre confirmação de email */}
-      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-        <div className="flex items-start gap-3">
-          <Mail className="h-5 w-5 text-yellow-600 mt-0.5" />
-          <div>
-            <h3 className="font-medium text-yellow-800">Confirmação de Email</h3>
-            <p className="text-sm text-yellow-700 mt-1">
-              Novos usuários precisam confirmar o email antes de fazer login. Para facilitar os testes, 
-              considere desabilitar a confirmação de email nas configurações do Supabase 
-              (Authentication → Settings → Email Auth → "Confirm email").
-            </p>
-          </div>
         </div>
       </div>
 
