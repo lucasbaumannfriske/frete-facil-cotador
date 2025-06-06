@@ -47,6 +47,8 @@ const GerenciadorUsuarios = () => {
   // Mutation para adicionar usuário
   const addUserMutation = useMutation({
     mutationFn: async ({ nome, email, senha }: { nome: string; email: string; senha: string }) => {
+      console.log('Tentando criar usuário:', { nome, email });
+      
       // 1. Criar usuário no Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
@@ -59,29 +61,36 @@ const GerenciadorUsuarios = () => {
       });
 
       if (authError) {
+        console.error('Erro no Supabase Auth:', authError);
         throw new Error(`Erro ao criar usuário: ${authError.message}`);
       }
 
-      if (!authData.user) {
-        throw new Error('Erro ao criar usuário: dados do usuário não retornados');
+      console.log('Usuário criado no Auth:', authData);
+
+      // 2. Obter usuário atual autenticado
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      
+      if (!currentUser) {
+        throw new Error('Usuário não autenticado');
       }
 
-      // 2. Adicionar à tabela system_users
+      // 3. Adicionar à tabela system_users
       const { data: systemUserData, error: systemUserError } = await supabase
         .from('system_users')
         .insert([{
           nome,
           email,
-          created_by: (await supabase.auth.getUser()).data.user?.id
+          created_by: currentUser.id
         }])
         .select()
         .single();
 
       if (systemUserError) {
         console.error('Erro ao criar usuário do sistema:', systemUserError);
-        throw systemUserError;
+        throw new Error(`Erro ao registrar usuário no sistema: ${systemUserError.message}`);
       }
 
+      console.log('Usuário criado no sistema:', systemUserData);
       return systemUserData;
     },
     onSuccess: () => {

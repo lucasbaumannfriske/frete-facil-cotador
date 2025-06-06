@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
@@ -350,7 +351,7 @@ const HistoricoCotacoes = ({ cotacoes, loading = false }: HistoricoCotacoesProps
                       </div>
                     </div>
 
-                    {/* Transportadoras */}
+                    {/* Transportadoras - Corrigido para mostrar valor total */}
                     <div className="mb-4">
                       <h4 className="font-medium mb-2 flex items-center gap-2">
                         <TruckIcon className="h-4 w-4 text-primary" />
@@ -359,7 +360,7 @@ const HistoricoCotacoes = ({ cotacoes, loading = false }: HistoricoCotacoesProps
                       <div className="space-y-3">
                         {currentData.transportadoras.map((transp, idx) => (
                           <div key={idx} className="p-3 bg-background rounded border">
-                            <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+                            <div className="grid grid-cols-1 md:grid-cols-6 gap-3">
                               <div>
                                 <label className="text-xs text-muted-foreground">Nome:</label>
                                 {isEditing ? (
@@ -393,9 +394,28 @@ const HistoricoCotacoes = ({ cotacoes, loading = false }: HistoricoCotacoesProps
                                     value={transp.valorUnitario || ""}
                                     onChange={(e) => updateTransportadora(idx, 'valorUnitario', e.target.value)}
                                     className="mt-1"
+                                    placeholder="R$ 0,00"
                                   />
                                 ) : (
-                                  <p className="mt-1 text-sm">{transp.valorUnitario || "N/A"}</p>
+                                  <p className="mt-1 text-sm">
+                                    {transp.valorUnitario ? `R$ ${transp.valorUnitario}` : "N/A"}
+                                  </p>
+                                )}
+                              </div>
+                              
+                              <div>
+                                <label className="text-xs text-muted-foreground">Valor Total:</label>
+                                {isEditing ? (
+                                  <Input
+                                    value={transp.valorTotal || ""}
+                                    onChange={(e) => updateTransportadora(idx, 'valorTotal', e.target.value)}
+                                    className="mt-1"
+                                    placeholder="R$ 0,00"
+                                  />
+                                ) : (
+                                  <p className="mt-1 text-sm font-medium text-green-600">
+                                    {transp.valorTotal ? `R$ ${transp.valorTotal}` : "N/A"}
+                                  </p>
                                 )}
                               </div>
                               
@@ -406,9 +426,12 @@ const HistoricoCotacoes = ({ cotacoes, loading = false }: HistoricoCotacoesProps
                                     value={transp.propostaFinal || ""}
                                     onChange={(e) => updateTransportadora(idx, 'propostaFinal', e.target.value)}
                                     className="mt-1"
+                                    placeholder="R$ 0,00"
                                   />
                                 ) : (
-                                  <p className="mt-1 text-sm">{transp.propostaFinal || "N/A"}</p>
+                                  <p className="mt-1 text-sm font-bold text-blue-600">
+                                    {transp.propostaFinal ? `R$ ${transp.propostaFinal}` : "N/A"}
+                                  </p>
                                 )}
                               </div>
                               
@@ -457,7 +480,6 @@ const HistoricoCotacoes = ({ cotacoes, loading = false }: HistoricoCotacoesProps
                       </div>
                     )}
 
-                    {/* Ações */}
                     <div className="flex gap-2 pt-2 border-t">
                       {isEditing ? (
                         <>
