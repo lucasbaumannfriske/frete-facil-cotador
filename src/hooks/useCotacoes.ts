@@ -9,43 +9,29 @@ export const useCotacoes = () => {
   const [loading, setLoading] = useState(true)
   const [authenticated, setAuthenticated] = useState(false)
 
-  // Função para autenticar o usuário Lucas
-  const autenticarUsuario = async () => {
+  // Verificar se o usuário está autenticado
+  const verificarAutenticacao = async () => {
     try {
-      console.log('Verificando autenticação...')
+      const { data: { user }, error } = await supabase.auth.getUser()
       
-      // Primeiro verifica se já existe um usuário logado
-      const { data: { user }, error: userError } = await supabase.auth.getUser()
-      
-      if (userError) {
-        console.log('Erro ao verificar usuário:', userError)
+      if (error) {
+        console.log('Erro ao verificar usuário:', error)
+        setAuthenticated(false)
+        return null
       }
       
-      if (!user) {
-        console.log('Usuário não encontrado, fazendo login...')
-        
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: 'lucasfriske@agrofarm.net.br',
-          password: 'Nexus@4202'
-        })
-        
-        if (error) {
-          console.error('Erro no login:', error)
-          toast.error('Erro de autenticação: ' + error.message)
-          return null
-        } else {
-          console.log('Login realizado com sucesso')
-          setAuthenticated(true)
-          return data.user
-        }
-      } else {
-        console.log('Usuário já autenticado:', user.email)
+      if (user) {
+        console.log('Usuário autenticado:', user.email)
         setAuthenticated(true)
         return user
+      } else {
+        console.log('Usuário não autenticado')
+        setAuthenticated(false)
+        return null
       }
     } catch (error) {
-      console.error('Erro na autenticação:', error)
-      toast.error('Erro na autenticação')
+      console.error('Erro na verificação de autenticação:', error)
+      setAuthenticated(false)
       return null
     }
   }
@@ -55,10 +41,10 @@ export const useCotacoes = () => {
     try {
       setLoading(true)
       
-      // Garantir que o usuário esteja autenticado
-      const user = await autenticarUsuario()
+      // Verificar se o usuário está autenticado
+      const user = await verificarAutenticacao()
       if (!user) {
-        console.log('Falha na autenticação')
+        console.log('Usuário não autenticado - não é possível carregar cotações')
         setLoading(false)
         return
       }
@@ -131,10 +117,10 @@ export const useCotacoes = () => {
     try {
       console.log('Iniciando salvamento da cotação...')
       
-      // Garantir que o usuário esteja autenticado
-      const user = await autenticarUsuario()
+      // Verificar se o usuário está autenticado
+      const user = await verificarAutenticacao()
       if (!user) {
-        toast.error('Falha na autenticação')
+        toast.error('Usuário não autenticado')
         return false
       }
 
@@ -228,8 +214,8 @@ export const useCotacoes = () => {
     try {
       console.log('Atualizando cotação:', cotacao.id)
 
-      // Garantir que o usuário esteja autenticado
-      const user = await autenticarUsuario()
+      // Verificar se o usuário está autenticado
+      const user = await verificarAutenticacao()
       if (!user) {
         toast.error('Usuário não autenticado')
         return false
