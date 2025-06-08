@@ -36,7 +36,32 @@ export const useCotacoes = () => {
     }
   }
 
-  // Carregar cotações
+  // Função para criar log de auditoria
+  const criarLogAuditoria = async (action: string, tableName: string, recordId?: string, oldData?: any, newData?: any, description?: string) => {
+    try {
+      const user = await verificarAutenticacao()
+      if (!user) return
+
+      await supabase
+        .from('audit_logs')
+        .insert({
+          user_id: user.id,
+          user_email: user.email,
+          action,
+          table_name: tableName,
+          record_id: recordId,
+          old_data: oldData,
+          new_data: newData,
+          description
+        })
+
+      console.log(`Log de auditoria criado: ${action} em ${tableName}`)
+    } catch (error) {
+      console.error('Erro ao criar log de auditoria:', error)
+    }
+  }
+
+  // Carregar cotações (apenas não deletadas)
   const carregarCotacoes = async () => {
     try {
       setLoading(true)
@@ -58,6 +83,7 @@ export const useCotacoes = () => {
           produtos (*),
           transportadoras (*)
         `)
+        .is('deleted_at', null) // Apenas cotações não deletadas
         .order('created_at', { ascending: false })
 
       if (error) {
@@ -83,21 +109,25 @@ export const useCotacoes = () => {
         destino: cotacao.destino || '',
         roteiro: cotacao.roteiro || '',
         observacoes: cotacao.observacoes || '',
-        produtos: (cotacao.produtos || []).map((p: any) => ({
-          id: p.id,
-          nome: p.nome || '',
-          quantidade: p.quantidade || 1,
-          peso: p.peso || ''
-        })),
-        transportadoras: (cotacao.transportadoras || []).map((t: any) => ({
-          id: t.id,
-          nome: t.nome || '',
-          prazo: t.prazo || '',
-          valorUnitario: t.valor_unitario || '',
-          valorTotal: t.valor_total || '',
-          status: t.status || 'Pendente',
-          propostaFinal: t.proposta_final || ''
-        }))
+        produtos: (cotacao.produtos || [])
+          .filter((p: any) => !p.deleted_at) // Filtrar produtos não deletados
+          .map((p: any) => ({
+            id: p.id,
+            nome: p.nome || '',
+            quantidade: p.quantidade || 1,
+            peso: p.peso || ''
+          })),
+        transportadoras: (cotacao.transportadoras || [])
+          .filter((t: any) => !t.deleted_at) // Filtrar transportadoras não deletadas
+          .map((t: any) => ({
+            id: t.id,
+            nome: t.nome || '',
+            prazo: t.prazo || '',
+            valorUnitario: t.valor_unitario || '',
+            valorTotal: t.valor_total || '',
+            status: t.status || 'Pendente',
+            propostaFinal: t.proposta_final || ''
+          }))
       }))
 
       setCotacoes(cotacoesFormatadas)
@@ -154,6 +184,9 @@ export const useCotacoes = () => {
 
       console.log('Cotação salva:', cotacaoData)
 
+      // Log de auditoria para criação da cotação
+      await criarLogAuditoria('CREATE', 'cotacoes', cotacaoData.id, null, cotacaoData, `Cotação criada para cliente: ${novaCotacao.cliente}`)
+
       // Inserir produtos
       if (novaCotacao.produtos.length > 0) {
         const { error: produtosError } = await supabase
@@ -172,6 +205,9 @@ export const useCotacoes = () => {
           toast.error('Erro ao salvar produtos: ' + produtosError.message)
           return false
         }
+
+        // Log de auditoria para produtos
+        await criarLogAuditoria('CREATE', 'produtos', cotacaoData.id, null, novaCotacao.produtos, `${novaCotacao.produtos.length} produtos adicionados`)
       }
 
       // Inserir transportadoras
@@ -196,6 +232,9 @@ export const useCotacoes = () => {
           toast.error('Erro ao salvar transportadoras: ' + transportadorasError.message)
           return false
         }
+
+        // Log de auditoria para transportadoras
+        await criarLogAuditoria('CREATE', 'transportadoras', cotacaoData.id, null, novaCotacao.transportadoras, `${novaCotacao.transportadoras.length} transportadoras adicionadas`)
       }
 
       toast.success('Cotação salva com sucesso!')
@@ -221,6 +260,13 @@ export const useCotacoes = () => {
         return false
       }
 
+      // Buscar dados antigos para o log
+      const { data: cotacaoAntiga } = await supabase
+        .from('cotacoes')
+        .select('*')
+        .eq('id', cotacao.id)
+        .single()
+
       // Atualizar cotação principal
       const { error: cotacaoError } = await supabase
         .from('cotacoes')
@@ -245,15 +291,14 @@ export const useCotacoes = () => {
         return false
       }
 
-      // Atualizar produtos (deletar todos e inserir novamente)
-      const { error: deleteProdutosError } = await supabase
-        .from('produtos')
-        .delete()
-        .eq('cotacao_id', cotacao.id)
+      // Log de auditoria para atualização da cotação
+      await criarLogAuditoria('UPDATE', 'cotacoes', cotacao.id, cotacaoAntiga, cotacao, `Cotação atualizada para cliente: ${cotacao.cliente}`)
 
-      if (deleteProdutosError) {
-        console.error('Erro ao deletar produtos:', deleteProdutosError)
-      }
+      // Atualizar produtos (soft delete dos antigos e inserir novos)
+      await supabase
+        .from('produtos')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('cotacao_id', cotacao.id)
 
       if (cotacao.produtos.length > 0) {
         const { error: produtosError } = await supabase
@@ -272,17 +317,15 @@ export const useCotacoes = () => {
           toast.error('Erro ao atualizar produtos: ' + produtosError.message)
           return false
         }
+
+        await criarLogAuditoria('UPDATE', 'produtos', cotacao.id, null, cotacao.produtos, `Produtos atualizados: ${cotacao.produtos.length} itens`)
       }
 
-      // Atualizar transportadoras (deletar todas e inserir novamente)
-      const { error: deleteTransportadorasError } = await supabase
+      // Atualizar transportadoras (soft delete das antigas e inserir novas)
+      await supabase
         .from('transportadoras')
-        .delete()
+        .update({ deleted_at: new Date().toISOString() })
         .eq('cotacao_id', cotacao.id)
-
-      if (deleteTransportadorasError) {
-        console.error('Erro ao deletar transportadoras:', deleteTransportadorasError)
-      }
 
       if (cotacao.transportadoras.length > 0) {
         const { error: transportadorasError } = await supabase
@@ -305,6 +348,8 @@ export const useCotacoes = () => {
           toast.error('Erro ao atualizar transportadoras: ' + transportadorasError.message)
           return false
         }
+
+        await criarLogAuditoria('UPDATE', 'transportadoras', cotacao.id, null, cotacao.transportadoras, `Transportadoras atualizadas: ${cotacao.transportadoras.length} itens`)
       }
 
       toast.success('Cotação atualizada com sucesso!')
@@ -318,12 +363,27 @@ export const useCotacoes = () => {
     }
   }
 
-  // Deletar cotação
+  // Soft delete de cotação
   const deletarCotacao = async (id: string) => {
     try {
+      // Verificar se o usuário está autenticado
+      const user = await verificarAutenticacao()
+      if (!user) {
+        toast.error('Usuário não autenticado')
+        return false
+      }
+
+      // Buscar dados da cotação para o log
+      const { data: cotacaoData } = await supabase
+        .from('cotacoes')
+        .select('*')
+        .eq('id', id)
+        .single()
+
+      // Soft delete da cotação
       const { error } = await supabase
         .from('cotacoes')
-        .delete()
+        .update({ deleted_at: new Date().toISOString() })
         .eq('id', id)
 
       if (error) {
@@ -331,6 +391,20 @@ export const useCotacoes = () => {
         toast.error('Erro ao deletar cotação: ' + error.message)
         return false
       }
+
+      // Soft delete dos produtos e transportadoras relacionados
+      await supabase
+        .from('produtos')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('cotacao_id', id)
+
+      await supabase
+        .from('transportadoras')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('cotacao_id', id)
+
+      // Log de auditoria
+      await criarLogAuditoria('DELETE', 'cotacoes', id, cotacaoData, null, `Cotação removida (soft delete) para cliente: ${cotacaoData?.cliente}`)
 
       toast.success('Cotação removida com sucesso!')
       await carregarCotacoes()

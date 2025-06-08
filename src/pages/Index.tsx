@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import ClienteForm from "@/components/ClienteForm";
 import ProdutosTable from "@/components/ProdutosTable";
@@ -7,6 +6,7 @@ import Observacoes from "@/components/Observacoes";
 import ActionButtons from "@/components/ActionButtons";
 import EmailPreview from "@/components/EmailPreview";
 import HistoricoCotacoes from "@/components/HistoricoCotacoes";
+import LogsAuditoria from "@/components/LogsAuditoria";
 import { Produto, Transportadora } from "@/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { PackageIcon, TruckIcon } from "lucide-react";
@@ -163,9 +163,10 @@ const Index = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsList className="grid w-full grid-cols-3 mb-6">
             <TabsTrigger value="nova-cotacao" className="text-base">Nova Cotação</TabsTrigger>
             <TabsTrigger value="historico" className="text-base">Histórico de Cotações</TabsTrigger>
+            <TabsTrigger value="logs" className="text-base">Logs de Auditoria</TabsTrigger>
           </TabsList>
 
           <TabsContent value="nova-cotacao">
@@ -230,6 +231,14 @@ const Index = () => {
                   cotacoes={cotacoes} 
                   loading={loading}
                 />
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="logs" className="mt-0">
+            <Card className="border-t-4 border-t-primary shadow-md">
+              <CardContent className="p-6">
+                <LogsAuditoria />
               </CardContent>
             </Card>
           </TabsContent>

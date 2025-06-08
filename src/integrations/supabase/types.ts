@@ -9,6 +9,45 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          description: string | null
+          id: string
+          new_data: Json | null
+          old_data: Json | null
+          record_id: string | null
+          table_name: string
+          user_email: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          record_id?: string | null
+          table_name: string
+          user_email?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          new_data?: Json | null
+          old_data?: Json | null
+          record_id?: string | null
+          table_name?: string
+          user_email?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       cotacoes: {
         Row: {
           cep: string | null
@@ -16,6 +55,7 @@ export type Database = {
           cliente: string
           created_at: string | null
           data: string
+          deleted_at: string | null
           destino: string | null
           endereco: string | null
           estado: string | null
@@ -32,6 +72,7 @@ export type Database = {
           cliente: string
           created_at?: string | null
           data: string
+          deleted_at?: string | null
           destino?: string | null
           endereco?: string | null
           estado?: string | null
@@ -48,6 +89,7 @@ export type Database = {
           cliente?: string
           created_at?: string | null
           data?: string
+          deleted_at?: string | null
           destino?: string | null
           endereco?: string | null
           estado?: string | null
@@ -64,6 +106,7 @@ export type Database = {
         Row: {
           cotacao_id: string
           created_at: string | null
+          deleted_at: string | null
           id: string
           nome: string
           peso: string | null
@@ -72,6 +115,7 @@ export type Database = {
         Insert: {
           cotacao_id: string
           created_at?: string | null
+          deleted_at?: string | null
           id?: string
           nome: string
           peso?: string | null
@@ -80,6 +124,7 @@ export type Database = {
         Update: {
           cotacao_id?: string
           created_at?: string | null
+          deleted_at?: string | null
           id?: string
           nome?: string
           peso?: string | null
@@ -126,6 +171,7 @@ export type Database = {
         Row: {
           cotacao_id: string
           created_at: string | null
+          deleted_at: string | null
           id: string
           nome: string
           prazo: string | null
@@ -138,6 +184,7 @@ export type Database = {
         Insert: {
           cotacao_id: string
           created_at?: string | null
+          deleted_at?: string | null
           id?: string
           nome: string
           prazo?: string | null
@@ -150,6 +197,7 @@ export type Database = {
         Update: {
           cotacao_id?: string
           created_at?: string | null
+          deleted_at?: string | null
           id?: string
           nome?: string
           prazo?: string | null
