@@ -1,12 +1,16 @@
 
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { TruckIcon, ChartBarIcon, LogOut, User } from "lucide-react";
+import { TruckIcon, ChartBarIcon, LogOut, User, ActivityIcon } from "lucide-react";
 import { toast } from "sonner";
+import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import LogsAuditoria from "@/components/LogsAuditoria";
 
 const Navigation = () => {
   const location = useLocation();
   const currentPath = location.pathname;
+  const [logsOpen, setLogsOpen] = useState(false);
 
   const handleLogout = () => {
     localStorage.removeItem("usuarioLogado");
@@ -51,6 +55,24 @@ const Navigation = () => {
             <span>Usuários</span>
           </Button>
         </Link>
+        
+        <Dialog open={logsOpen} onOpenChange={setLogsOpen}>
+          <DialogTrigger asChild>
+            <Button 
+              variant="ghost" 
+              className="flex items-center gap-2"
+            >
+              <ActivityIcon className="h-4 w-4" />
+              <span>Logs</span>
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-4xl max-h-[80vh]">
+            <DialogHeader>
+              <DialogTitle>Logs de Auditoria</DialogTitle>
+            </DialogHeader>
+            <LogsAuditoria />
+          </DialogContent>
+        </Dialog>
         
         <Button 
           variant="outline" 
