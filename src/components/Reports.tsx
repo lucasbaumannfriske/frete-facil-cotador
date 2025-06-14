@@ -40,26 +40,30 @@ const Reports = ({ historico }: ReportsProps) => {
   const [dataInicio, setDataInicio] = useState<Date | undefined>(new Date(new Date().setMonth(new Date().getMonth() - 3)));
   const [dataFim, setDataFim] = useState<Date | undefined>(new Date());
 
-  // Função para formatar data no formato dd/mm/yyyy
+  // Função para formatar string dd/mm/yyyy para objeto Date
   const formatDate = (dateString: string) => {
     const parts = dateString.split('/');
     if (parts.length !== 3) return new Date();
     return new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
   };
 
-  // Função para aplicar o filtro de datas e status
+  // Corrige o filtro para considerar todo o dia final
   const cotacoesFiltradas = useMemo(() => {
     let filtradas = historico;
 
-    // Filtro de datas
     if (dataInicio && dataFim) {
+      // Garante que dataFim inclui até 23:59:59
+      const dataInicioZ = new Date(dataInicio);
+      dataInicioZ.setHours(0, 0, 0, 0);
+      const dataFimZ = new Date(dataFim);
+      dataFimZ.setHours(23, 59, 59, 999);
+
       filtradas = filtradas.filter((c) => {
-        const data = formatDate(c.data);
-        return data >= dataInicio && data <= dataFim;
+        const dataC = formatDate(c.data);
+        return dataC >= dataInicioZ && dataC <= dataFimZ;
       });
     }
 
-    // Filtro de status de transportadoras
     if (statusFiltro !== "todos") {
       filtradas = filtradas.filter((c) =>
         c.transportadoras.some(
@@ -71,34 +75,27 @@ const Reports = ({ historico }: ReportsProps) => {
     return filtradas;
   }, [historico, dataInicio, dataFim, statusFiltro]);
 
-  // Só contar as cotações aprovadas para KPIs.
-  const totalCotacoesAprovadas = useMemo(
-    () =>
-      cotacoesFiltradas.filter((c) =>
-        c.transportadoras.some(
-          (t) => t.status && t.status.toLowerCase() === "aprovado"
-        )
-      ).length,
+  // KPIs: só cotações aprovadas
+  const totalCotacoesAprovadas = useMemo(() =>
+    cotacoesFiltradas.filter((c) =>
+      c.transportadoras.some(
+        (t) => t.status && t.status.toLowerCase() === "aprovado"
+      )
+    ).length,
     [cotacoesFiltradas]
   );
 
   const totalAprovado = useMemo(
     () =>
       cotacoesFiltradas.reduce((total, cotacao) => {
-        const totalAprovadosPorCot =
-          cotacao.transportadoras
-            .filter(
-              (t) =>
-                t.status && t.status.toLowerCase() === "aprovado"
-            )
-            .reduce(
-              (soma, t) =>
-                soma +
-                (parseFloat(
-                  t.propostaFinal || t.valorTotal || "0"
-                ) || 0),
-              0
-            );
+        const totalAprovadosPorCot = cotacao.transportadoras
+          .filter((t) => t.status && t.status.toLowerCase() === "aprovado")
+          .reduce(
+            (soma, t) =>
+              soma +
+              (parseFloat(t.propostaFinal || t.valorTotal || "0") || 0),
+            0
+          );
         return total + totalAprovadosPorCot;
       }, 0),
     [cotacoesFiltradas]
@@ -256,7 +253,7 @@ const Reports = ({ historico }: ReportsProps) => {
         </Card>
       </div>
 
-      {/* Seção Desempenho das Transportadoras (usando dados filtrados) */}
+      {/* Seção Desempenho das Transportadoras (usando dados filtrados e atualizados conforme os filtros) */}
       <DesempenhoTransportadoras historico={cotacoesFiltradas} />
     </div>
   );
