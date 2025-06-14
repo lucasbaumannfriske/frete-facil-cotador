@@ -32,7 +32,13 @@ export function useTransportadorasCadastros() {
 
   const addMutation = useMutation({
     mutationFn: async (novo: Omit<TransportadoraCadastro, "id" | "created_at" | "updated_at">) => {
-      const { error } = await supabase.from("transportadoras_cadastros").insert([novo]);
+      const user = supabase.auth.getUser ? (await supabase.auth.getUser()).data.user : undefined;
+      if (!user) throw new Error("Usuário não autenticado");
+      const toInsert = {
+        ...novo,
+        user_id: user.id,
+      };
+      const { error } = await supabase.from("transportadoras_cadastros").insert([toInsert]);
       if (error) throw error;
     },
     onSuccess: () => {
