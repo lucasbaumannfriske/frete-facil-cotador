@@ -1,152 +1,141 @@
 
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
+import { Trash2 } from "lucide-react";
+import { useTransportadorasCadastros } from "@/hooks/useTransportadorasCadastros";
 import { Transportadora } from "@/types";
-import { FileText } from "lucide-react";
 
-interface TransportadorasTableProps {
+interface Props {
   transportadoras: Transportadora[];
-  setTransportadoras: (transportadoras: Transportadora[]) => void;
-  calcularTotal: (id: string, valor: string) => void;
+  setTransportadoras: (v: Transportadora[]) => void;
+  calcularTotal: (id: string, valorUnitario: string) => void;
 }
 
-const TransportadorasTable = ({
-  transportadoras,
-  setTransportadoras,
-  calcularTotal,
-}: TransportadorasTableProps) => {
-  const adicionarTransportadora = () => {
+const TransportadorasTable = ({ transportadoras, setTransportadoras, calcularTotal }: Props) => {
+  const { transportadoras: cadastradas, isLoading } = useTransportadorasCadastros();
+
+  // Ao trocar o nome pelo dropdown, preenche os campos referentes à transportadora cadastrada
+  const handleSelectTransportadora = (index: number, id: string) => {
+    const cadastro = cadastradas.find(t => t.id === id);
+    setTransportadoras(transportadoras.map((t, i) => {
+      if (i !== index) return t;
+      return {
+        ...t,
+        nome: cadastro?.nome || "",
+        // Aqui pode-se adicionar campos de e-mail/telefone se desejar no futuro
+      };
+    }));
+  };
+
+  const handleInputChange = (index: number, field: keyof Transportadora, value: string) => {
+    const updated = transportadoras.map((t, i) => (i === index ? { ...t, [field]: value } : t));
+    setTransportadoras(updated);
+    // Se mudar valor unitário, recalcula o total
+    if (field === "valorUnitario") {
+      calcularTotal(transportadoras[index].id, value);
+    }
+  };
+
+  const handleRemove = (id: string) => {
+    setTransportadoras(transportadoras.filter(t => t.id !== id));
+  };
+
+  const handleAdd = () => {
     setTransportadoras([
       ...transportadoras,
       {
-        id: Date.now().toString(),
+        id: Math.random().toString(),
         nome: "",
         prazo: "",
         valorUnitario: "",
         valorTotal: "",
         status: "Pendente",
-        propostaFinal: "", // Inicializa o campo de proposta final
+        propostaFinal: "",
       },
     ]);
   };
 
-  const removerTransportadora = (id: string) => {
-    setTransportadoras(transportadoras.filter((t) => t.id !== id));
-  };
-
-  const atualizarTransportadora = (
-    id: string,
-    campo: keyof Transportadora,
-    valor: string
-  ) => {
-    setTransportadoras(
-      transportadoras.map((transp) =>
-        transp.id === id ? { ...transp, [campo]: valor } : transp
-      )
-    );
-    
-    if (campo === "valorUnitario") {
-      calcularTotal(id, valor);
-    }
-  };
-
   return (
-    <div className="space-y-4">
-      <h2>Cotação de Frete</h2>
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Transportadora</TableHead>
-              <TableHead>Prazo Estimado (dias)</TableHead>
-              <TableHead>Valor Unitário (R$)</TableHead>
-              <TableHead>Valor Total (R$)</TableHead>
-              <TableHead>Proposta Final</TableHead>
-              <TableHead className="w-[100px]">Ação</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {transportadoras.map((transp) => (
-              <TableRow key={transp.id}>
-                <TableCell>
-                  <Input
-                    className="min-w-[200px]"
-                    value={transp.nome}
-                    onChange={(e) =>
-                      atualizarTransportadora(transp.id, "nome", e.target.value)
-                    }
-                    placeholder="Nome da transportadora"
-                  />
-                </TableCell>
-                <TableCell>
-                  <Input
-                    type="number"
-                    value={transp.prazo}
-                    onChange={(e) =>
-                      atualizarTransportadora(transp.id, "prazo", e.target.value)
-                    }
-                    min="1"
-                    placeholder="Prazo em dias"
-                  />
-                </TableCell>
-                <TableCell>
-                  <Input
-                    type="number"
-                    value={transp.valorUnitario}
-                    onChange={(e) =>
-                      atualizarTransportadora(transp.id, "valorUnitario", e.target.value)
-                    }
-                    min="0"
-                    step="0.01"
-                    placeholder="Valor unitário"
-                  />
-                </TableCell>
-                <TableCell>
-                  <Input
-                    type="number"
-                    value={transp.valorTotal}
-                    readOnly
-                    className="bg-gray-50"
-                    placeholder="Valor total"
-                  />
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-1">
-                    <FileText className="h-4 w-4 text-muted-foreground" />
-                    <Input
-                      value={transp.propostaFinal || ""}
-                      onChange={(e) =>
-                        atualizarTransportadora(transp.id, "propostaFinal", e.target.value)
-                      }
-                      placeholder="Proposta final"
-                    />
-                  </div>
-                </TableCell>
-                <TableCell>
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => removerTransportadora(transp.id)}
-                  >
-                    Remover
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+    <div>
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="font-semibold">Transportadoras</h3>
+        <Button type="button" variant="outline" onClick={handleAdd}>Adicionar Transportadora</Button>
       </div>
-      <Button onClick={adicionarTransportadora} className="mt-2">
-        Adicionar Transportadora
-      </Button>
+      <div className="overflow-x-auto">
+        <table className="min-w-full text-sm border rounded">
+          <thead>
+            <tr className="bg-muted">
+              <th className="px-2 py-1">Transportadora</th>
+              <th className="px-2 py-1">Prazo</th>
+              <th className="px-2 py-1">Valor Unitário</th>
+              <th className="px-2 py-1">Total</th>
+              <th className="px-2 py-1">Status</th>
+              <th className="px-2 py-1"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {transportadoras.map((t, idx) => (
+              <tr key={t.id}>
+                <td>
+                  <Select
+                    value={cadastradas.find(c => c.nome === t.nome)?.id || ""}
+                    onValueChange={id => handleSelectTransportadora(idx, id)}
+                    disabled={isLoading}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={isLoading ? "Carregando..." : "Selecione"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {cadastradas.map(opt => (
+                        <SelectItem key={opt.id} value={opt.id}>
+                          {opt.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </td>
+                <td>
+                  <Input
+                    value={t.prazo}
+                    onChange={e => handleInputChange(idx, "prazo", e.target.value)}
+                    placeholder="Prazo"
+                  />
+                </td>
+                <td>
+                  <Input
+                    value={t.valorUnitario}
+                    onChange={e => handleInputChange(idx, "valorUnitario", e.target.value)}
+                    placeholder="Valor Unitário"
+                    type="number"
+                  />
+                </td>
+                <td>
+                  <Input
+                    value={t.valorTotal}
+                    onChange={e => handleInputChange(idx, "valorTotal", e.target.value)}
+                    placeholder="Total"
+                    type="number"
+                    readOnly
+                  />
+                </td>
+                <td>
+                  <Input
+                    value={t.status}
+                    onChange={e => handleInputChange(idx, "status", e.target.value)}
+                    placeholder="Status"
+                  />
+                </td>
+                <td>
+                  <Button variant="ghost" size="icon" onClick={() => handleRemove(t.id)}>
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
