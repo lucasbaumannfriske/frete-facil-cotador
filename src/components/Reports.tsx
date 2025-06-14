@@ -21,12 +21,12 @@ interface ReportsProps {
 }
 
 const Reports = ({ historico }: ReportsProps) => {
-  // Draft states para os calendários
-  const [draftDataInicio, setDraftDataInicio] = useState<Date | undefined>(new Date(new Date().setMonth(new Date().getMonth() - 3)));
-  const [draftDataFim, setDraftDataFim] = useState<Date | undefined>(new Date());
-  // States realmente usados para filtrar
-  const [dataInicio, setDataInicio] = useState<Date | undefined>(draftDataInicio);
-  const [dataFim, setDataFim] = useState<Date | undefined>(draftDataFim);
+  // Sempre iniciar datas como o dia atual
+  const today = new Date();
+  const [draftDataInicio, setDraftDataInicio] = useState<Date | undefined>(today);
+  const [draftDataFim, setDraftDataFim] = useState<Date | undefined>(today);
+  const [dataInicio, setDataInicio] = useState<Date | undefined>(today);
+  const [dataFim, setDataFim] = useState<Date | undefined>(today);
 
   // Função robusta para converter data em string para Date. Suporta "YYYY-MM-DD" e "DD/MM/YYYY"
   const parseDate = (dateString: string): Date | undefined => {
