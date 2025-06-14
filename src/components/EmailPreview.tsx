@@ -14,6 +14,7 @@ interface EmailPreviewProps {
   estado: string;
   cep: string;
   fazenda: string;
+  roteiro: string; // ADICIONADO
   origem: string;
   destino: string;
   produtos: Produto[];
@@ -27,6 +28,7 @@ const EmailPreview = ({
   endereco,
   cidade,
   estado,
+  roteiro, // ADICIONADO
   origem,
   destino,
   produtos,
@@ -67,7 +69,10 @@ const EmailPreview = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                 <div>
                   <p><strong>Cliente:</strong> {cliente}</p>
-                  <p><strong>Endereço de entrega:</strong> {endereco}</p>
+                  <p>
+                    <strong>Roteiro detalhado:</strong>{" "}
+                    {roteiro ? roteiro : "N/A"}
+                  </p>
                   <p><strong>Cidade:</strong> {cidade}</p>
                 </div>
                 <div>

@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
@@ -30,6 +29,7 @@ import {
 } from "@/components/ui/collapsible";
 import { useCotacoes } from "@/hooks/useCotacoes";
 import { toast } from "sonner";
+import { format } from "date-fns";
 
 interface HistoricoCotacoesProps {
   cotacoes: CotacaoSalva[];
@@ -170,6 +170,19 @@ const HistoricoCotacoes = ({ cotacoes, loading = false }: HistoricoCotacoesProps
               const isEditing = editingId === cotacao.id;
               const currentData = isEditing ? editData! : cotacao;
               
+              // Formatação da data para o padrão brasileiro
+              let dataFormatada = cotacao.data;
+              if (cotacao.data) {
+                try {
+                  // Aceita timestamp ou string em formato YYYY-MM-DD
+                  const dt = new Date(cotacao.data);
+                  dataFormatada = format(dt, "dd/MM/yyyy");
+                } catch (e) {
+                  // fallback para string original se não conseguir converter
+                  dataFormatada = cotacao.data;
+                }
+              }
+
               return (
                 <Collapsible 
                   key={cotacao.id} 
@@ -181,7 +194,10 @@ const HistoricoCotacoes = ({ cotacoes, loading = false }: HistoricoCotacoesProps
                     <div className="flex flex-col items-start gap-1">
                       <div className="flex items-center gap-2">
                         <TruckIcon className="h-5 w-5 text-primary" />
-                        <div className="font-medium">{cotacao.cliente} <span className="text-muted-foreground">(Tomador do Serviço)</span></div>
+                        <div className="font-medium">
+                          {cotacao.cliente}{" "}
+                          <span className="text-muted-foreground">(Tomador do Serviço)</span>
+                        </div>
                       </div>
                       <div className="text-sm text-muted-foreground flex flex-wrap gap-x-6 mt-1">
                         {cotacao.origem && (
@@ -197,7 +213,7 @@ const HistoricoCotacoes = ({ cotacoes, loading = false }: HistoricoCotacoesProps
                           </div>
                         )}
                         <div className="ml-auto">
-                          {cotacao.data}
+                          {dataFormatada}
                         </div>
                       </div>
                     </div>
