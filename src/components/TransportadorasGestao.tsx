@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -13,6 +14,39 @@ const initialForm: Omit<TransportadoraCadastro, "id" | "created_at" | "updated_a
   telefone2: "",
 };
 
+// Função utilitária para aplicar a máscara ao digitar telefone
+function maskTelefone(valor: string) {
+  // Remove tudo que não seja dígito
+  const digits = valor.replace(/\D/g, "");
+  if (digits.length === 0) return "";
+  // Celular: 11 dígitos, Fixo: 10 dígitos
+  if (digits.length <= 10) {
+    // (00) 0000-0000 (permite digitação progressiva)
+    return digits
+      .replace(/^(\d{0,2})(\d{0,4})(\d{0,4}).*/, function (_, ddd, p1, p2) {
+        let out = "";
+        if (ddd) out += `(${ddd}`;
+        if (ddd && ddd.length === 2) out += ") ";
+        if (p1) out += p1;
+        if (p1 && p1.length === 4) out += "-";
+        if (p2) out += p2;
+        return out;
+      });
+  } else {
+    // (00) 00000-0000
+    return digits
+      .replace(/^(\d{0,2})(\d{0,5})(\d{0,4}).*/, function (_, ddd, p1, p2) {
+        let out = "";
+        if (ddd) out += `(${ddd}`;
+        if (ddd && ddd.length === 2) out += ") ";
+        if (p1) out += p1;
+        if (p1 && p1.length === 5) out += "-";
+        if (p2) out += p2;
+        return out;
+      });
+  }
+}
+
 export default function TransportadorasGestao() {
   const [editing, setEditing] = useState<string | null>(null);
   const [form, setForm] = useState(initialForm);
@@ -26,7 +60,13 @@ export default function TransportadorasGestao() {
   } = useTransportadorasCadastros();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    // Se for telefone, aplicar máscara
+    if (name === "telefone1" || name === "telefone2") {
+      setForm({ ...form, [name]: maskTelefone(value) });
+    } else {
+      setForm({ ...form, [name]: value });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -58,18 +98,16 @@ export default function TransportadorasGestao() {
     setForm(initialForm);
   };
 
-  // Função utilitária para formatar telefone: (00) 00000-0000 ou (00) 0000-0000
+  // Função utilitária para formatar telefone no display final
   function formatTelefone(telefone: string) {
     if (!telefone) return "";
-    // Remove tudo que não seja dígito
     const digits = telefone.replace(/\D/g, "");
-    // Celular: 11 dígitos, Fixo: 10 dígitos
     if (digits.length === 11) {
       return digits.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
     } else if (digits.length === 10) {
       return digits.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
     }
-    return telefone; // Retorna original se não bater o tamanho esperado
+    return telefone;
   }
 
   return (
@@ -84,8 +122,8 @@ export default function TransportadorasGestao() {
               <Input name="email2" type="email" value={form.email2} onChange={handleChange} placeholder="E-mail 2" />
             </div>
             <div className="flex gap-2">
-              <Input name="telefone1" value={form.telefone1} onChange={handleChange} placeholder="Telefone 1" />
-              <Input name="telefone2" value={form.telefone2} onChange={handleChange} placeholder="Telefone 2" />
+              <Input name="telefone1" value={form.telefone1} onChange={handleChange} placeholder="Telefone 1" maxLength={15} />
+              <Input name="telefone2" value={form.telefone2} onChange={handleChange} placeholder="Telefone 2" maxLength={15} />
             </div>
             <div className="flex gap-2">
               <Button type="submit">{editing ? "Salvar" : "Cadastrar"}</Button>
@@ -111,7 +149,6 @@ export default function TransportadorasGestao() {
                     {(t.telefone1 || t.telefone2) && (
                       <>
                         <br />
-                        {/* Aplicar máscara ao exibir os telefones */}
                         {t.telefone1 && <>{formatTelefone(t.telefone1)}</>}
                         {t.telefone2 && <>&nbsp;{formatTelefone(t.telefone2)}</>}
                       </>
