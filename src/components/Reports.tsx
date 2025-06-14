@@ -47,116 +47,44 @@ const Reports = ({ historico }: ReportsProps) => {
     return new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
   };
 
-  const agruparPorPeriodo = (cotacoes: CotacaoSalva[]) => {
-    let cotacoesFiltradas = cotacoes;
+  // Função para aplicar o filtro de datas e status
+  const cotacoesFiltradas = useMemo(() => {
+    let filtradas = historico;
 
+    // Filtro de datas
     if (dataInicio && dataFim) {
-      cotacoesFiltradas = cotacoes.filter((c) => {
+      filtradas = filtradas.filter((c) => {
         const data = formatDate(c.data);
         return data >= dataInicio && data <= dataFim;
       });
     }
 
-    // Só considerar cotações aprovadas para gráfico e KPI
-    cotacoesFiltradas = cotacoesFiltradas.filter((cotacao) =>
-      cotacao.transportadoras.some(
-        (t) => t.status && t.status.toLowerCase() === "aprovado"
-      )
-    );
+    // Filtro de status de transportadoras
+    if (statusFiltro !== "todos") {
+      filtradas = filtradas.filter((c) =>
+        c.transportadoras.some(
+          (t) => t.status && t.status.toLowerCase() === statusFiltro
+        )
+      );
+    }
 
-    const dadosAgrupados: Record<
-      string,
-      {
-        periodo: string;
-        totalAprovado: number;
-        count: number;
-      }
-    > = {};
-
-    cotacoesFiltradas.forEach((cotacao) => {
-      let chave = "";
-      const data = formatDate(cotacao.data);
-
-      if (periodoFiltro === "diario") {
-        chave = format(data, "dd/MM/yyyy");
-      } else if (periodoFiltro === "mensal") {
-        chave = format(data, "MM/yyyy");
-      } else {
-        chave = format(data, "yyyy");
-      }
-
-      if (!dadosAgrupados[chave]) {
-        dadosAgrupados[chave] = {
-          periodo: chave,
-          totalAprovado: 0,
-          count: 0,
-        };
-      }
-
-      cotacao.transportadoras.forEach((transportadora) => {
-        if (
-          transportadora.status &&
-          transportadora.status.toLowerCase() === "aprovado"
-        ) {
-          const valor =
-            parseFloat(
-              transportadora.propostaFinal ||
-                transportadora.valorTotal ||
-                "0"
-            ) || 0;
-          dadosAgrupados[chave].totalAprovado += valor;
-        }
-      });
-
-      dadosAgrupados[chave].count += 1;
-    });
-
-    const chavesOrdenadas = Object.keys(dadosAgrupados).sort((a, b) => {
-      const datePartsA = a.split("/");
-      const datePartsB = b.split("/");
-      if (periodoFiltro === "diario") {
-        return formatDate(a).getTime() - formatDate(b).getTime();
-      } else if (periodoFiltro === "mensal") {
-        return (
-          new Date(
-            parseInt(datePartsA[1]),
-            parseInt(datePartsA[0]) - 1,
-            1
-          ).getTime() -
-          new Date(
-            parseInt(datePartsB[1]),
-            parseInt(datePartsB[0]) - 1,
-            1
-          ).getTime()
-        );
-      } else {
-        return parseInt(a) - parseInt(b);
-      }
-    });
-
-    return chavesOrdenadas.map((chave) => dadosAgrupados[chave]);
-  };
-
-  // Atualiza para trazer só dados aprovados.
-  const dadosGrafico = useMemo(
-    () => agruparPorPeriodo(historico),
-    [historico, periodoFiltro, statusFiltro, dataInicio, dataFim]
-  );
+    return filtradas;
+  }, [historico, dataInicio, dataFim, statusFiltro]);
 
   // Só contar as cotações aprovadas para KPIs.
   const totalCotacoesAprovadas = useMemo(
     () =>
-      historico.filter((c) =>
+      cotacoesFiltradas.filter((c) =>
         c.transportadoras.some(
           (t) => t.status && t.status.toLowerCase() === "aprovado"
         )
       ).length,
-    [historico]
+    [cotacoesFiltradas]
   );
 
   const totalAprovado = useMemo(
     () =>
-      historico.reduce((total, cotacao) => {
+      cotacoesFiltradas.reduce((total, cotacao) => {
         const totalAprovadosPorCot =
           cotacao.transportadoras
             .filter(
@@ -173,7 +101,7 @@ const Reports = ({ historico }: ReportsProps) => {
             );
         return total + totalAprovadosPorCot;
       }, 0),
-    [historico]
+    [cotacoesFiltradas]
   );
 
   return (
@@ -286,7 +214,7 @@ const Reports = ({ historico }: ReportsProps) => {
         </CardContent>
       </Card>
 
-      {/* Cards de métricas só com os dois KPIs necessários */}
+      {/* Cards de métricas (apenas os dois KPIs solicitados) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
         <Card className="border-l-4 border-l-blue-500">
           <CardContent className="p-6">
@@ -328,64 +256,8 @@ const Reports = ({ historico }: ReportsProps) => {
         </Card>
       </div>
 
-      {/* Seção Desempenho das Transportadoras */}
-      <DesempenhoTransportadoras historico={historico} />
-
-      {/* Gráfico */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <BarChart3 className="h-5 w-5" />
-            Evolução {periodoFiltro === "diario"
-              ? "Diária"
-              : periodoFiltro === "mensal"
-              ? "Mensal"
-              : "Anual"} das Cotações Aprovadas
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {dadosGrafico.length === 0 ? (
-            <div className="flex flex-col items-center justify-center p-12 text-center">
-              <div className="p-3 bg-muted rounded-full mb-4">
-                <BarChart3 className="h-8 w-8 text-muted-foreground" />
-              </div>
-              <p className="text-lg font-medium text-muted-foreground mb-2">
-                Nenhum dado disponível
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Ajuste os filtros para visualizar os dados
-              </p>
-            </div>
-          ) : (
-            <div className="h-[400px]">
-              <ChartContainer config={{
-                aprovado: { color: "#16a34a" }
-              }}>
-                <BarChart
-                  data={dadosGrafico}
-                  margin={{
-                    top: 5,
-                    right: 30,
-                    left: 20,
-                    bottom: 5,
-                  }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="periodo" />
-                  <YAxis />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Legend />
-                  <Bar
-                    name="Aprovado"
-                    dataKey="totalAprovado"
-                    fill="var(--color-aprovado)"
-                  />
-                </BarChart>
-              </ChartContainer>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* Seção Desempenho das Transportadoras (usando dados filtrados) */}
+      <DesempenhoTransportadoras historico={cotacoesFiltradas} />
     </div>
   );
 };
