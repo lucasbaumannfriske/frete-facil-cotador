@@ -1,18 +1,10 @@
+
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Calendar } from "@/components/ui/calendar";
-import { Button } from "@/components/ui/button";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import {
-  Calendar as CalendarIcon,
-  TrendingUp,
-  CheckCircle,
-  BarChart3,
-} from "lucide-react";
+import { BarChart3 } from "lucide-react";
 import { CotacaoSalva } from "@/types";
+import ReportsKpis from "./ReportsKpis";
+import ReportsFiltros from "./ReportsFiltros";
 import DesempenhoTransportadoras from "./DesempenhoTransportadoras";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 
@@ -21,24 +13,20 @@ interface ReportsProps {
 }
 
 const Reports = ({ historico }: ReportsProps) => {
-  // Sempre iniciar datas como o dia atual
   const today = new Date();
   const [draftDataInicio, setDraftDataInicio] = useState<Date | undefined>(today);
   const [draftDataFim, setDraftDataFim] = useState<Date | undefined>(today);
   const [dataInicio, setDataInicio] = useState<Date | undefined>(today);
   const [dataFim, setDataFim] = useState<Date | undefined>(today);
 
-  // Função robusta para converter data em string para Date. Suporta "YYYY-MM-DD" e "DD/MM/YYYY"
   const parseDate = (dateString: string): Date | undefined => {
     if (!dateString) return undefined;
-    // Detectar formato YYYY-MM-DD (do banco)
     if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
       const [yyyy, mm, dd] = dateString.split("-");
       const parsed = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
       if (isNaN(parsed.getTime())) return undefined;
       return parsed;
     }
-    // Detectar formato DD/MM/YYYY (usuário antigo)
     if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) {
       const [dd, mm, yyyy] = dateString.split("/");
       const parsed = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
@@ -48,7 +36,6 @@ const Reports = ({ historico }: ReportsProps) => {
     return undefined;
   };
 
-  // Só filtra quando clica no botão "Aplicar Filtros"
   const cotacoesFiltradas = useMemo(() => {
     let filtradas = historico;
     if (dataInicio && dataFim) {
@@ -65,7 +52,6 @@ const Reports = ({ historico }: ReportsProps) => {
     return filtradas;
   }, [historico, dataInicio, dataFim]);
 
-  // KPIs: Somente cotações com status aprovado
   const totalCotacoesAprovadas = useMemo(
     () =>
       cotacoesFiltradas.filter((c) =>
@@ -92,23 +78,16 @@ const Reports = ({ historico }: ReportsProps) => {
     [cotacoesFiltradas]
   );
 
-  // Dados mensais para gráfico: [{ mes: "06/2024", valorAprovado: X }, ...]
   const historicoMensal = useMemo(() => {
-    // { 'YYYY-MM': valorTotal }
     const meses: { [key: string]: number } = {};
-
     cotacoesFiltradas.forEach((cotacao) => {
-      // considerar APENAS OS APROVADOS
       const isAprovado = cotacao.transportadoras.some(
         (t) => t.status && t.status.toLowerCase() === "aprovado"
       );
       if (!isAprovado) return;
-
       const dataCot = parseDate(cotacao.data);
       if (!dataCot) return;
-      // chave: AAAA-MM
       const key = `${dataCot.getFullYear()}-${String(dataCot.getMonth() + 1).padStart(2, '0')}`;
-      // valor aprovado nesta cotação
       const valorCot = cotacao.transportadoras
         .filter((t) => t.status && t.status.toLowerCase() === "aprovado")
         .reduce(
@@ -118,8 +97,6 @@ const Reports = ({ historico }: ReportsProps) => {
         );
       meses[key] = (meses[key] || 0) + valorCot;
     });
-
-    // Ordena os meses crescentes e formata para [{ mes: "MM/yyyy", valorAprovado }]
     return Object.keys(meses)
       .sort()
       .map((key) => ({
@@ -141,126 +118,29 @@ const Reports = ({ historico }: ReportsProps) => {
         </div>
       </div>
 
-      {/* Filtros: com botão de aplicar */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            Filtros por Período
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col sm:flex-row gap-4">
-            {/* Data Início */}
-            <div className="space-y-2 w-full sm:w-1/3">
-              <Label className="text-sm font-medium">Data Início</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full justify-start text-left font-normal">
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {draftDataInicio ? format(draftDataInicio, "dd/MM/yyyy") : "Selecionar"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={draftDataInicio}
-                    onSelect={setDraftDataInicio}
-                    locale={ptBR}
-                    className="pointer-events-auto"
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-            {/* Data Fim */}
-            <div className="space-y-2 w-full sm:w-1/3">
-              <Label className="text-sm font-medium">Data Fim</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full justify-start text-left font-normal">
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {draftDataFim ? format(draftDataFim, "dd/MM/yyyy") : "Selecionar"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={draftDataFim}
-                    onSelect={setDraftDataFim}
-                    locale={ptBR}
-                    className="pointer-events-auto"
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-            {/* Botão APLICAR FILTROS */}
-            <div className="flex items-end w-full sm:w-1/3 gap-2">
-              <Button
-                variant="default"
-                className="w-1/2"
-                onClick={() => {
-                  setDataInicio(draftDataInicio);
-                  setDataFim(draftDataFim);
-                }}
-              >
-                Aplicar Filtros
-              </Button>
-              <Button
-                variant="outline"
-                className="w-1/2"
-                onClick={() => {
-                  setDraftDataInicio(undefined);
-                  setDraftDataFim(undefined);
-                  setDataInicio(undefined);
-                  setDataFim(undefined);
-                }}
-              >
-                Limpar Filtros
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Filtros Modulares */}
+      <ReportsFiltros
+        draftDataInicio={draftDataInicio}
+        draftDataFim={draftDataFim}
+        setDraftDataInicio={setDraftDataInicio}
+        setDraftDataFim={setDraftDataFim}
+        onAplicarFiltros={() => {
+          setDataInicio(draftDataInicio);
+          setDataFim(draftDataFim);
+        }}
+        onLimparFiltros={() => {
+          setDraftDataInicio(undefined);
+          setDraftDataFim(undefined);
+          setDataInicio(undefined);
+          setDataFim(undefined);
+        }}
+      />
 
       {/* KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card className="border-l-4 border-l-blue-500">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <TrendingUp className="h-5 w-5 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">
-                  Total de Cotações Aprovadas
-                </p>
-                <p className="text-2xl font-bold">
-                  {totalCotacoesAprovadas}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-l-4 border-l-green-500">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-green-100 rounded-lg">
-                <CheckCircle className="h-5 w-5 text-green-600" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">
-                  Valor Total Aprovado
-                </p>
-                <p className="text-2xl font-bold text-green-600">
-                  R${" "}
-                  {valorTotalAprovado.toLocaleString("pt-BR", {
-                    minimumFractionDigits: 2,
-                  })}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <ReportsKpis
+        totalCotacoesAprovadas={totalCotacoesAprovadas}
+        valorTotalAprovado={valorTotalAprovado}
+      />
 
       {/* Nova ordem: Desempenho das Transportadoras primeiro */}
       <DesempenhoTransportadoras historico={cotacoesFiltradas} />
