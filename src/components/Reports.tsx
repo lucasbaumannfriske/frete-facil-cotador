@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
@@ -29,6 +28,7 @@ import {
   BarChart3 
 } from "lucide-react";
 import { CotacaoSalva } from "@/types";
+import DesempenhoTransportadoras from "./DesempenhoTransportadoras";
 
 interface ReportsProps {
   historico: CotacaoSalva[];
@@ -311,6 +311,9 @@ const Reports = ({ historico }: ReportsProps) => {
           </CardContent>
         </Card>
       </div>
+
+      {/* NOVA SEÇÃO: Desempenho das Transportadoras */}
+      <DesempenhoTransportadoras historico={historico} />
 
       {/* Gráfico */}
       <Card>
