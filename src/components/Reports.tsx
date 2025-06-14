@@ -40,11 +40,17 @@ const Reports = ({ historico }: ReportsProps) => {
   const [dataInicio, setDataInicio] = useState<Date | undefined>(new Date(new Date().setMonth(new Date().getMonth() - 3)));
   const [dataFim, setDataFim] = useState<Date | undefined>(new Date());
 
-  // Função para formatar string dd/mm/yyyy para objeto Date
-  const formatDate = (dateString: string) => {
+  // Função para formatar string dd/mm/yyyy para objeto Date OU retornar undefined se inválida
+  const formatDate = (dateString: string): Date | undefined => {
+    if (!dateString || typeof dateString !== "string") return undefined;
     const parts = dateString.split('/');
-    if (parts.length !== 3) return new Date();
-    return new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+    if (parts.length !== 3) return undefined;
+    const [dd, mm, yyyy] = parts;
+    if (!dd || !mm || !yyyy) return undefined;
+    const parsed = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
+    // Verifica se a data é válida
+    if (isNaN(parsed.getTime())) return undefined;
+    return parsed;
   };
 
   // Corrige o filtro para considerar todo o dia final
@@ -52,14 +58,25 @@ const Reports = ({ historico }: ReportsProps) => {
     let filtradas = historico;
 
     if (dataInicio && dataFim) {
-      // Garante que dataFim inclui até 23:59:59
       const dataInicioZ = new Date(dataInicio);
       dataInicioZ.setHours(0, 0, 0, 0);
       const dataFimZ = new Date(dataFim);
       dataFimZ.setHours(23, 59, 59, 999);
 
+      // Debug log para conferir datas
+      console.log("Filtro de datas:", {
+        dataInicioZ: dataInicioZ.toISOString(),
+        dataFimZ: dataFimZ.toISOString(),
+        cotacoesConvertidas: historico.map((c) => ({
+          id: c.id,
+          dataRaw: c.data,
+          dataDate: formatDate(c.data)?.toISOString() ?? "inválido"
+        }))
+      });
+
       filtradas = filtradas.filter((c) => {
         const dataC = formatDate(c.data);
+        if (!dataC) return false; // Ignorar se falhou a conversão
         return dataC >= dataInicioZ && dataC <= dataFimZ;
       });
     }
