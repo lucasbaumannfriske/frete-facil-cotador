@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
@@ -217,7 +216,7 @@ const LogsAuditoria = () => {
         )}
       </div>
 
-      <ScrollArea className="h-[500px] pr-4">
+      <ScrollArea className="h-[500px] pr-0">
         {filteredLogs.length === 0 ? (
           <div className="text-center py-12 bg-muted/20 rounded-lg border border-dashed">
             <FileTextIcon className="h-12 w-12 text-muted-foreground mx-auto mb-3 opacity-50" />
@@ -239,36 +238,34 @@ const LogsAuditoria = () => {
               return (
                 <Card
                   key={log.id}
-                  className="border-l-4 border-l-primary/20 shadow-sm"
+                  className="border-l-4 border-l-primary/20 shadow-sm overflow-x-auto"
+                  style={{ maxWidth: "100%", wordBreak: "break-word" }}
                 >
                   <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-2">
+                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <Badge className={getActionColor(log.action)}>
                           {getActionText(log.action)}
                         </Badge>
                         <Badge variant="outline" className="gap-1">
                           <DatabaseIcon className="h-3 w-3" />
-                          {getTableText(log.table_name)}
+                          <span className="truncate max-w-[110px]">{getTableText(log.table_name)}</span>
                         </Badge>
                       </div>
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-1 text-xs text-muted-foreground whitespace-nowrap">
                         <CalendarIcon className="h-3 w-3" />
                         {formatDate(log.created_at)}
                       </div>
                     </div>
-
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1 whitespace-pre-line break-all">
                       <UserIcon className="h-3 w-3" />
-                      <span className="font-medium">
-                        {log.user_email || "Usuário desconhecido"}
-                      </span>
+                      <span className="font-medium truncate max-w-[220px]">{log.user_email || "Usuário desconhecido"}</span>
                     </div>
                   </CardHeader>
 
                   {log.description && (
                     <CardContent className="pt-0">
-                      <p className="text-sm bg-muted/30 p-3 rounded border-l-2 border-l-primary/30">
+                      <p className="text-sm bg-muted/40 p-3 rounded border-l-2 border-l-primary/30 max-w-full break-words whitespace-pre-line">
                         {log.description}
                       </p>
                     </CardContent>
@@ -280,7 +277,7 @@ const LogsAuditoria = () => {
                         <h4 className="font-medium text-muted-foreground mb-2">
                           Alterações:
                         </h4>
-                        <p className="bg-blue-50 border border-blue-200 p-3 rounded text-xs">
+                        <p className="bg-blue-50 border border-blue-200 p-3 rounded text-xs max-w-full break-words whitespace-pre-line">
                           {changes}
                         </p>
                       </div>
@@ -293,7 +290,7 @@ const LogsAuditoria = () => {
                         <h4 className="font-medium text-muted-foreground mb-2">
                           Registro Criado:
                         </h4>
-                        <p className="bg-green-50 border border-green-200 p-3 rounded text-xs">
+                        <p className="bg-green-50 border border-green-200 p-3 rounded text-xs max-w-full break-words whitespace-pre-line">
                           {log.table_name === "cotacoes" &&
                             `Cliente: ${log.new_data.cliente}`}
                           {log.table_name === "transportadoras" &&
@@ -315,4 +312,3 @@ const LogsAuditoria = () => {
 };
 
 export default LogsAuditoria;
-
