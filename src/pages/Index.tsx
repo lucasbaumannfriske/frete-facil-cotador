@@ -246,6 +246,7 @@ const Index = () => {
           fazenda={fazenda}
           origem={origem}
           destino={destino}
+          roteiro={roteiro}
           produtos={produtos}
           observacoes={observacoes}
         />
