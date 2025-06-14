@@ -14,8 +14,8 @@ const Usuarios = () => {
           <h1 className="text-3xl font-bold text-center">Gerenciar Usuários</h1>
         </div>
 
-        <Card className="border-t-4 border-t-primary shadow-md">
-          <CardContent className="p-6">
+        <Card className="rounded-2xl border-0 bg-green-50 shadow-md shadow-green-100 mb-4">
+          <CardContent className="p-8 flex flex-col gap-4">
             <GerenciadorUsuarios />
           </CardContent>
         </Card>
@@ -25,3 +25,4 @@ const Usuarios = () => {
 };
 
 export default Usuarios;
+

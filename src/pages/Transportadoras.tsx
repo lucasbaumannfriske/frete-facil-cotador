@@ -13,8 +13,8 @@ export default function TransportadorasPage() {
           <TruckIcon className="h-8 w-8 text-primary" />
           <h1 className="text-3xl font-bold text-center">Transportadoras</h1>
         </div>
-        <Card className="border-t-4 border-t-primary shadow-md">
-          <CardContent className="p-6">
+        <Card className="rounded-2xl border-0 bg-blue-50 shadow-md shadow-blue-100 mb-4">
+          <CardContent className="p-8 flex flex-col gap-4">
             <TransportadorasGestao />
           </CardContent>
         </Card>
