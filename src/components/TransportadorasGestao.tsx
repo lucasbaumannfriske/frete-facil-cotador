@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -59,6 +58,20 @@ export default function TransportadorasGestao() {
     setForm(initialForm);
   };
 
+  // Função utilitária para formatar telefone: (00) 00000-0000 ou (00) 0000-0000
+  function formatTelefone(telefone: string) {
+    if (!telefone) return "";
+    // Remove tudo que não seja dígito
+    const digits = telefone.replace(/\D/g, "");
+    // Celular: 11 dígitos, Fixo: 10 dígitos
+    if (digits.length === 11) {
+      return digits.replace(/(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
+    } else if (digits.length === 10) {
+      return digits.replace(/(\d{2})(\d{4})(\d{4})/, "($1) $2-$3");
+    }
+    return telefone; // Retorna original se não bater o tamanho esperado
+  }
+
   return (
     <div className="w-full max-w-2xl mx-auto">
       <Card>
@@ -95,8 +108,14 @@ export default function TransportadorasGestao() {
                   <div className="font-bold">{t.nome}</div>
                   <div className="text-xs text-muted-foreground">
                     {t.email1} {t.email2 && <>&bull; {t.email2}</>}
-                    {t.telefone1 && (<><br />{t.telefone1}</>)}
-                    {t.telefone2 && (<>&nbsp;{t.telefone2}</>)}
+                    {(t.telefone1 || t.telefone2) && (
+                      <>
+                        <br />
+                        {/* Aplicar máscara ao exibir os telefones */}
+                        {t.telefone1 && <>{formatTelefone(t.telefone1)}</>}
+                        {t.telefone2 && <>&nbsp;{formatTelefone(t.telefone2)}</>}
+                      </>
+                    )}
                   </div>
                 </div>
                 <div className="flex gap-2">
