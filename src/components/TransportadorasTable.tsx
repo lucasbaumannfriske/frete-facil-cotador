@@ -1,7 +1,6 @@
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from "@/components/ui/select";
 import { Trash2 } from "lucide-react";
 import { useTransportadorasCadastros } from "@/hooks/useTransportadorasCadastros";
 import { Transportadora } from "@/types";
@@ -13,6 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { TransportadoraCombobox } from "./TransportadoraCombobox";
 
 interface Props {
   transportadoras: Transportadora[];
@@ -83,22 +83,12 @@ const TransportadorasTable = ({ transportadoras, setTransportadoras, calcularTot
             {transportadoras.map((t, idx) => (
               <TableRow key={t.id}>
                 <TableCell>
-                  <Select
+                  <TransportadoraCombobox
                     value={cadastradas.find(c => c.nome === t.nome)?.id || ""}
-                    onValueChange={id => handleSelectTransportadora(idx, id)}
+                    onChange={id => handleSelectTransportadora(idx, id)}
+                    options={cadastradas}
                     disabled={isLoading}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder={isLoading ? "Carregando..." : "Selecione"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {cadastradas.map(opt => (
-                        <SelectItem key={opt.id} value={opt.id}>
-                          {opt.nome}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  />
                 </TableCell>
                 <TableCell>
                   <Input
