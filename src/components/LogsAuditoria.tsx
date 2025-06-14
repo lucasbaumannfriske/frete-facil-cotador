@@ -1,26 +1,11 @@
+
 import React, { useMemo, useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FileTextIcon, ActivityIcon } from "lucide-react";
 import { AuditLog, useAuditLogs } from "@/hooks/useAuditLogs";
-import {
-  FileTextIcon,
-  ActivityIcon,
-  UserIcon,
-  CalendarIcon,
-  DatabaseIcon,
-} from "lucide-react";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-
-const actionTypes = [
-  { value: "all", label: "Todas as Ações" },
-  { value: "CREATE", label: "Criação" },
-  { value: "UPDATE", label: "Edição" },
-  { value: "DELETE", label: "Exclusão" },
-];
+import AuditLogInfo from "./AuditLogInfo";
+import AuditLogCard from "./AuditLogCard";
+import AuditLogFilters from "./AuditLogFilters";
 
 const LogsAuditoria = () => {
   const { logs, loading } = useAuditLogs();
@@ -28,15 +13,6 @@ const LogsAuditoria = () => {
   // Estados dos filtros
   const [selectedUser, setSelectedUser] = useState("all");
   const [selectedAction, setSelectedAction] = useState("all");
-
-  // Listar usuários únicos a partir dos logs
-  const userOptions = useMemo(() => {
-    const emails = new Set<string>();
-    logs.forEach((log) => {
-      if (log.user_email) emails.add(log.user_email);
-    });
-    return Array.from(emails);
-  }, [logs]);
 
   // Filtragem dos logs
   const filteredLogs = useMemo(() => {
@@ -49,6 +25,7 @@ const LogsAuditoria = () => {
     });
   }, [logs, selectedUser, selectedAction]);
 
+  // Funções utilitárias (mantidas aqui para compartilhar facilmente com AuditLogCard)
   const getActionColor = (action: string) => {
     switch (action) {
       case "CREATE":
@@ -90,8 +67,9 @@ const LogsAuditoria = () => {
 
   const formatDate = (dateString: string) => {
     try {
-      return format(new Date(dateString), "dd/MM/yyyy 'às' HH:mm", {
-        locale: ptBR,
+      // eslint-disable-next-line
+      return require("date-fns").format(new Date(dateString), "dd/MM/yyyy 'às' HH:mm", {
+        locale: require("date-fns/locale").ptBR,
       });
     } catch {
       return dateString;
@@ -100,7 +78,6 @@ const LogsAuditoria = () => {
 
   const formatChanges = (oldData: any, newData: any, tableName: string) => {
     if (!oldData || !newData) return null;
-
     const changes: string[] = [];
     const fieldsToShow = {
       cotacoes: ["cliente", "origem", "destino", "fazenda"],
@@ -113,7 +90,6 @@ const LogsAuditoria = () => {
       ],
       produtos: ["nome", "quantidade", "peso"],
     };
-
     const fieldsToCheck =
       fieldsToShow[tableName as keyof typeof fieldsToShow] ||
       Object.keys(newData);
@@ -156,65 +132,16 @@ const LogsAuditoria = () => {
   return (
     <div>
       {/* Explicação didática */}
-      <Card className="mb-6 bg-muted/30 border-primary/10">
-        <CardHeader className="pb-1">
-          <CardTitle className="text-xl">O que são logs de auditoria?</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-sm text-muted-foreground">
-            Os logs de auditoria registram todas as ações importantes feitas por usuários dentro do sistema. 
-            Cada registro mostra quem fez a alteração, o tipo de operação (criação, edição ou exclusão), a data e o que foi alterado.
-            Utilize os filtros para rapidamente identificar e acompanhar quais usuários fizeram alterações e quais tipos de modificações foram realizadas.
-          </p>
-        </CardContent>
-      </Card>
+      <AuditLogInfo />
 
       {/* Filtros */}
-      <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-end mb-5">
-        <div className="flex-1 min-w-[180px]">
-          <label className="text-xs text-muted-foreground mb-1 block">Usuário</label>
-          <Select value={selectedUser} onValueChange={setSelectedUser}>
-            <SelectTrigger>
-              <SelectValue placeholder="Filtrar por usuário" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos os usuários</SelectItem>
-              {userOptions.map((email) => (
-                <SelectItem value={email} key={email}>
-                  {email}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex-1 min-w-[160px]">
-          <label className="text-xs text-muted-foreground mb-1 block">Ação</label>
-          <Select value={selectedAction} onValueChange={setSelectedAction}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {actionTypes.map(({ value, label }) => (
-                <SelectItem value={value} key={value}>
-                  {label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        {(selectedUser !== "all" || selectedAction !== "all") && (
-          <Button
-            variant="outline"
-            className="mt-1 md:mt-0"
-            onClick={() => {
-              setSelectedUser("all");
-              setSelectedAction("all");
-            }}
-          >
-            Limpar filtros
-          </Button>
-        )}
-      </div>
+      <AuditLogFilters
+        logs={logs}
+        selectedUser={selectedUser}
+        setSelectedUser={setSelectedUser}
+        selectedAction={selectedAction}
+        setSelectedAction={setSelectedAction}
+      />
 
       <ScrollArea className="h-[500px] pr-0">
         {filteredLogs.length === 0 ? (
@@ -229,81 +156,17 @@ const LogsAuditoria = () => {
           </div>
         ) : (
           <div className="space-y-3">
-            {filteredLogs.map((log) => {
-              const changes =
-                log.action === "UPDATE"
-                  ? formatChanges(log.old_data, log.new_data, log.table_name)
-                  : null;
-
-              return (
-                <Card
-                  key={log.id}
-                  className="border-l-4 border-l-primary/20 shadow-sm overflow-x-auto"
-                  style={{ maxWidth: "100%", wordBreak: "break-word" }}
-                >
-                  <CardHeader className="pb-3">
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Badge className={getActionColor(log.action)}>
-                          {getActionText(log.action)}
-                        </Badge>
-                        <Badge variant="outline" className="gap-1">
-                          <DatabaseIcon className="h-3 w-3" />
-                          <span className="truncate max-w-[110px]">{getTableText(log.table_name)}</span>
-                        </Badge>
-                      </div>
-                      <div className="flex items-center gap-1 text-xs text-muted-foreground whitespace-nowrap">
-                        <CalendarIcon className="h-3 w-3" />
-                        {formatDate(log.created_at)}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1 whitespace-pre-line break-all">
-                      <UserIcon className="h-3 w-3" />
-                      <span className="font-medium truncate max-w-[220px]">{log.user_email || "Usuário desconhecido"}</span>
-                    </div>
-                  </CardHeader>
-
-                  {log.description && (
-                    <CardContent className="pt-0">
-                      <p className="text-sm bg-muted/40 p-3 rounded border-l-2 border-l-primary/30 max-w-full break-words whitespace-pre-line">
-                        {log.description}
-                      </p>
-                    </CardContent>
-                  )}
-
-                  {changes && (
-                    <CardContent className="pt-0">
-                      <div className="text-sm">
-                        <h4 className="font-medium text-muted-foreground mb-2">
-                          Alterações:
-                        </h4>
-                        <p className="bg-blue-50 border border-blue-200 p-3 rounded text-xs max-w-full break-words whitespace-pre-line">
-                          {changes}
-                        </p>
-                      </div>
-                    </CardContent>
-                  )}
-
-                  {log.action === "CREATE" && log.new_data && (
-                    <CardContent className="pt-0">
-                      <div className="text-sm">
-                        <h4 className="font-medium text-muted-foreground mb-2">
-                          Registro Criado:
-                        </h4>
-                        <p className="bg-green-50 border border-green-200 p-3 rounded text-xs max-w-full break-words whitespace-pre-line">
-                          {log.table_name === "cotacoes" &&
-                            `Cliente: ${log.new_data.cliente}`}
-                          {log.table_name === "transportadoras" &&
-                            `Transportadora: ${log.new_data.nome}`}
-                          {log.table_name === "produtos" &&
-                            `Produto: ${log.new_data.nome}`}
-                        </p>
-                      </div>
-                    </CardContent>
-                  )}
-                </Card>
-              );
-            })}
+            {filteredLogs.map((log) => (
+              <AuditLogCard
+                key={log.id}
+                log={log}
+                formatChanges={formatChanges}
+                getActionColor={getActionColor}
+                getActionText={getActionText}
+                getTableText={getTableText}
+                formatDate={formatDate}
+              />
+            ))}
           </div>
         )}
       </ScrollArea>
