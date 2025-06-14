@@ -49,32 +49,34 @@ const Reports = ({ historico }: ReportsProps) => {
 
   const agruparPorPeriodo = (cotacoes: CotacaoSalva[]) => {
     let cotacoesFiltradas = cotacoes;
-    
+
     if (dataInicio && dataFim) {
-      cotacoesFiltradas = cotacoes.filter(c => {
+      cotacoesFiltradas = cotacoes.filter((c) => {
         const data = formatDate(c.data);
         return data >= dataInicio && data <= dataFim;
       });
     }
 
-    if (statusFiltro !== "todos") {
-      cotacoesFiltradas = cotacoesFiltradas.filter(cotacao => 
-        cotacao.transportadoras.some(t => t.status.toLowerCase() === statusFiltro)
-      );
-    }
+    // Só considerar cotações aprovadas para gráfico e KPI
+    cotacoesFiltradas = cotacoesFiltradas.filter((cotacao) =>
+      cotacao.transportadoras.some(
+        (t) => t.status && t.status.toLowerCase() === "aprovado"
+      )
+    );
 
-    const dadosAgrupados: Record<string, { 
-      periodo: string;
-      totalAprovado: number;
-      totalPendente: number;
-      totalRejeitado: number;
-      count: number;
-    }> = {};
+    const dadosAgrupados: Record<
+      string,
+      {
+        periodo: string;
+        totalAprovado: number;
+        count: number;
+      }
+    > = {};
 
-    cotacoesFiltradas.forEach(cotacao => {
+    cotacoesFiltradas.forEach((cotacao) => {
       let chave = "";
       const data = formatDate(cotacao.data);
-      
+
       if (periodoFiltro === "diario") {
         chave = format(data, "dd/MM/yyyy");
       } else if (periodoFiltro === "mensal") {
@@ -87,21 +89,22 @@ const Reports = ({ historico }: ReportsProps) => {
         dadosAgrupados[chave] = {
           periodo: chave,
           totalAprovado: 0,
-          totalPendente: 0,
-          totalRejeitado: 0,
-          count: 0
+          count: 0,
         };
       }
 
-      cotacao.transportadoras.forEach(transportadora => {
-        const valor = parseFloat(transportadora.propostaFinal || transportadora.valorTotal) || 0;
-        
-        if (transportadora.status.toLowerCase() === "aprovado") {
+      cotacao.transportadoras.forEach((transportadora) => {
+        if (
+          transportadora.status &&
+          transportadora.status.toLowerCase() === "aprovado"
+        ) {
+          const valor =
+            parseFloat(
+              transportadora.propostaFinal ||
+                transportadora.valorTotal ||
+                "0"
+            ) || 0;
           dadosAgrupados[chave].totalAprovado += valor;
-        } else if (transportadora.status.toLowerCase() === "pendente") {
-          dadosAgrupados[chave].totalPendente += valor;
-        } else if (transportadora.status.toLowerCase() === "rejeitado") {
-          dadosAgrupados[chave].totalRejeitado += valor;
         }
       });
 
@@ -109,39 +112,69 @@ const Reports = ({ historico }: ReportsProps) => {
     });
 
     const chavesOrdenadas = Object.keys(dadosAgrupados).sort((a, b) => {
-      const datePartsA = a.split('/');
-      const datePartsB = b.split('/');
-      
+      const datePartsA = a.split("/");
+      const datePartsB = b.split("/");
       if (periodoFiltro === "diario") {
         return formatDate(a).getTime() - formatDate(b).getTime();
       } else if (periodoFiltro === "mensal") {
-        return new Date(parseInt(datePartsA[1]), parseInt(datePartsA[0]) - 1, 1).getTime() - 
-               new Date(parseInt(datePartsB[1]), parseInt(datePartsB[0]) - 1, 1).getTime();
+        return (
+          new Date(
+            parseInt(datePartsA[1]),
+            parseInt(datePartsA[0]) - 1,
+            1
+          ).getTime() -
+          new Date(
+            parseInt(datePartsB[1]),
+            parseInt(datePartsB[0]) - 1,
+            1
+          ).getTime()
+        );
       } else {
         return parseInt(a) - parseInt(b);
       }
     });
 
-    return chavesOrdenadas.map(chave => dadosAgrupados[chave]);
+    return chavesOrdenadas.map((chave) => dadosAgrupados[chave]);
   };
 
-  const dadosGrafico = useMemo(() => agruparPorPeriodo(historico), [historico, periodoFiltro, statusFiltro, dataInicio, dataFim]);
+  // Atualiza para trazer só dados aprovados.
+  const dadosGrafico = useMemo(
+    () => agruparPorPeriodo(historico),
+    [historico, periodoFiltro, statusFiltro, dataInicio, dataFim]
+  );
 
-  const totalAprovado = useMemo(() => 
-    dadosGrafico.reduce((total, item) => total + item.totalAprovado, 0)
-  , [dadosGrafico]);
+  // Só contar as cotações aprovadas para KPIs.
+  const totalCotacoesAprovadas = useMemo(
+    () =>
+      historico.filter((c) =>
+        c.transportadoras.some(
+          (t) => t.status && t.status.toLowerCase() === "aprovado"
+        )
+      ).length,
+    [historico]
+  );
 
-  const totalPendente = useMemo(() => 
-    dadosGrafico.reduce((total, item) => total + item.totalPendente, 0)
-  , [dadosGrafico]);
-
-  const totalRejeitado = useMemo(() => 
-    dadosGrafico.reduce((total, item) => total + item.totalRejeitado, 0)
-  , [dadosGrafico]);
-
-  const totalCotacoes = useMemo(() => 
-    dadosGrafico.reduce((total, item) => total + item.count, 0)
-  , [dadosGrafico]);
+  const totalAprovado = useMemo(
+    () =>
+      historico.reduce((total, cotacao) => {
+        const totalAprovadosPorCot =
+          cotacao.transportadoras
+            .filter(
+              (t) =>
+                t.status && t.status.toLowerCase() === "aprovado"
+            )
+            .reduce(
+              (soma, t) =>
+                soma +
+                (parseFloat(
+                  t.propostaFinal || t.valorTotal || "0"
+                ) || 0),
+              0
+            );
+        return total + totalAprovadosPorCot;
+      }, 0),
+    [historico]
+  );
 
   return (
     <div className="space-y-6">
@@ -253,8 +286,8 @@ const Reports = ({ historico }: ReportsProps) => {
         </CardContent>
       </Card>
 
-      {/* Cards de métricas */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Cards de métricas só com os dois KPIs necessários */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
         <Card className="border-l-4 border-l-blue-500">
           <CardContent className="p-6">
             <div className="flex items-center gap-3">
@@ -262,8 +295,12 @@ const Reports = ({ historico }: ReportsProps) => {
                 <TrendingUp className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Total de Cotações</p>
-                <p className="text-2xl font-bold">{totalCotacoes}</p>
+                <p className="text-sm text-muted-foreground">
+                  Total de Cotações Aprovadas
+                </p>
+                <p className="text-2xl font-bold">
+                  {totalCotacoesAprovadas}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -276,43 +313,22 @@ const Reports = ({ historico }: ReportsProps) => {
                 <CheckCircle className="h-5 w-5 text-green-600" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">Total Aprovado</p>
-                <p className="text-2xl font-bold text-green-600">R$ {totalAprovado.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-yellow-500">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-yellow-100 rounded-lg">
-                <Clock className="h-5 w-5 text-yellow-600" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total Pendente</p>
-                <p className="text-2xl font-bold text-yellow-600">R$ {totalPendente.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-red-500">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-red-100 rounded-lg">
-                <XCircle className="h-5 w-5 text-red-600" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total Rejeitado</p>
-                <p className="text-2xl font-bold text-red-600">R$ {totalRejeitado.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</p>
+                <p className="text-sm text-muted-foreground">
+                  Valor Total Aprovado
+                </p>
+                <p className="text-2xl font-bold text-green-600">
+                  R${" "}
+                  {totalAprovado.toLocaleString("pt-BR", {
+                    minimumFractionDigits: 2,
+                  })}
+                </p>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* NOVA SEÇÃO: Desempenho das Transportadoras */}
+      {/* Seção Desempenho das Transportadoras */}
       <DesempenhoTransportadoras historico={historico} />
 
       {/* Gráfico */}
@@ -320,7 +336,11 @@ const Reports = ({ historico }: ReportsProps) => {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <BarChart3 className="h-5 w-5" />
-            Evolução de Valores {periodoFiltro === "diario" ? "Diários" : periodoFiltro === "mensal" ? "Mensais" : "Anuais"}
+            Evolução {periodoFiltro === "diario"
+              ? "Diária"
+              : periodoFiltro === "mensal"
+              ? "Mensal"
+              : "Anual"} das Cotações Aprovadas
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -329,18 +349,18 @@ const Reports = ({ historico }: ReportsProps) => {
               <div className="p-3 bg-muted rounded-full mb-4">
                 <BarChart3 className="h-8 w-8 text-muted-foreground" />
               </div>
-              <p className="text-lg font-medium text-muted-foreground mb-2">Nenhum dado disponível</p>
-              <p className="text-sm text-muted-foreground">Ajuste os filtros para visualizar os dados</p>
+              <p className="text-lg font-medium text-muted-foreground mb-2">
+                Nenhum dado disponível
+              </p>
+              <p className="text-sm text-muted-foreground">
+                Ajuste os filtros para visualizar os dados
+              </p>
             </div>
           ) : (
             <div className="h-[400px]">
-              <ChartContainer
-                config={{
-                  aprovado: { color: "#16a34a" },
-                  pendente: { color: "#eab308" },
-                  rejeitado: { color: "#dc2626" },
-                }}
-              >
+              <ChartContainer config={{
+                aprovado: { color: "#16a34a" }
+              }}>
                 <BarChart
                   data={dadosGrafico}
                   margin={{
@@ -355,9 +375,11 @@ const Reports = ({ historico }: ReportsProps) => {
                   <YAxis />
                   <ChartTooltip content={<ChartTooltipContent />} />
                   <Legend />
-                  <Bar name="Aprovado" dataKey="totalAprovado" fill="var(--color-aprovado)" />
-                  <Bar name="Pendente" dataKey="totalPendente" fill="var(--color-pendente)" />
-                  <Bar name="Rejeitado" dataKey="totalRejeitado" fill="var(--color-rejeitado)" />
+                  <Bar
+                    name="Aprovado"
+                    dataKey="totalAprovado"
+                    fill="var(--color-aprovado)"
+                  />
                 </BarChart>
               </ChartContainer>
             </div>

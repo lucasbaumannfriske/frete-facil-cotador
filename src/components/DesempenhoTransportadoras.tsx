@@ -21,7 +21,6 @@ interface DesempenhoProps {
   - respondidas: nº de respostas com valor preenchido
   - aprovadas: nº de cotações aprovadas
   - soma dos valores aprovados
-  - valor médio aprovado
 */
 
 interface TransportadoraStats {
@@ -30,15 +29,16 @@ interface TransportadoraStats {
   respondidas: number;
   aprovadas: number;
   somaAprovados: number;
-  mediaAprovados: number | null;
 }
 
-function calcularDesempenhoTransportadoras(historico: CotacaoSalva[]): TransportadoraStats[] {
+function calcularDesempenhoTransportadoras(
+  historico: CotacaoSalva[]
+): TransportadoraStats[] {
   // Map: nome -> {stats}
   const statsMap: Record<string, TransportadoraStats> = {};
 
-  historico.forEach(cotacao => {
-    cotacao.transportadoras.forEach(transportadora => {
+  historico.forEach((cotacao) => {
+    cotacao.transportadoras.forEach((transportadora) => {
       const nome = transportadora.nome;
       if (!statsMap[nome]) {
         statsMap[nome] = {
@@ -47,27 +47,26 @@ function calcularDesempenhoTransportadoras(historico: CotacaoSalva[]): Transport
           respondidas: 0,
           aprovadas: 0,
           somaAprovados: 0,
-          mediaAprovados: null,
         };
       }
       statsMap[nome].solicitadas += 1;
       if (transportadora.valorTotal || transportadora.propostaFinal) {
         statsMap[nome].respondidas += 1;
       }
-      if (transportadora.status && transportadora.status.toLowerCase() === "aprovado") {
+      if (
+        transportadora.status &&
+        transportadora.status.toLowerCase() === "aprovado"
+      ) {
         statsMap[nome].aprovadas += 1;
         const valor =
-          parseFloat(transportadora.propostaFinal || transportadora.valorTotal || "0") || 0;
+          parseFloat(
+            transportadora.propostaFinal ||
+              transportadora.valorTotal ||
+              "0"
+          ) || 0;
         statsMap[nome].somaAprovados += valor;
       }
     });
-  });
-
-  // Calcular médias
-  Object.values(statsMap).forEach(s => {
-    if (s.aprovadas > 0) {
-      s.mediaAprovados = s.somaAprovados / s.aprovadas;
-    }
   });
 
   // Ordenar por nome (A-Z)
@@ -76,14 +75,21 @@ function calcularDesempenhoTransportadoras(historico: CotacaoSalva[]): Transport
   );
 }
 
-const DesempenhoTransportadoras: React.FC<DesempenhoProps> = ({ historico }) => {
-  const dados = useMemo(() => calcularDesempenhoTransportadoras(historico), [historico]);
+const DesempenhoTransportadoras: React.FC<DesempenhoProps> = ({
+  historico,
+}) => {
+  const dados = useMemo(
+    () => calcularDesempenhoTransportadoras(historico),
+    [historico]
+  );
 
   return (
     <div className="bg-white rounded-xl border px-4 py-6 shadow-sm mb-6">
       <div className="flex items-center gap-2 mb-4">
         <Truck className="text-primary" size={20} />
-        <span className="font-bold text-lg">Desempenho das Transportadoras</span>
+        <span className="font-bold text-lg">
+          Desempenho das Transportadoras
+        </span>
       </div>
 
       <div className="overflow-x-auto">
@@ -95,13 +101,15 @@ const DesempenhoTransportadoras: React.FC<DesempenhoProps> = ({ historico }) => 
               <TableHead>RESPONDIDAS</TableHead>
               <TableHead>APROVADAS</TableHead>
               <TableHead>SOMA VALORES APROVADOS (R$)</TableHead>
-              <TableHead>VALOR MÉDIO APROVADO (R$)</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {dados.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-4 text-muted-foreground">
+                <TableCell
+                  colSpan={5}
+                  className="text-center py-4 text-muted-foreground"
+                >
                   Nenhum dado de desempenho disponível.
                 </TableCell>
               </TableRow>
@@ -113,13 +121,10 @@ const DesempenhoTransportadoras: React.FC<DesempenhoProps> = ({ historico }) => 
                 <TableCell>{stat.respondidas}</TableCell>
                 <TableCell>{stat.aprovadas}</TableCell>
                 <TableCell>
-                  {"R$ " + stat.somaAprovados.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-                </TableCell>
-                <TableCell>
-                  {stat.mediaAprovados !== null
-                    ? "R$ " +
-                      stat.mediaAprovados.toLocaleString("pt-BR", { minimumFractionDigits: 2 })
-                    : "N/A"}
+                  {"R$ " +
+                    stat.somaAprovados.toLocaleString("pt-BR", {
+                      minimumFractionDigits: 2,
+                    })}
                 </TableCell>
               </TableRow>
             ))}
@@ -131,4 +136,3 @@ const DesempenhoTransportadoras: React.FC<DesempenhoProps> = ({ historico }) => 
 };
 
 export default DesempenhoTransportadoras;
-
