@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
@@ -237,7 +236,10 @@ const Reports = ({ historico }: ReportsProps) => {
         </Card>
       </div>
 
-      {/* Gráfico: Histórico Mensal do Valor Total Aprovado */}
+      {/* Nova ordem: Desempenho das Transportadoras primeiro */}
+      <DesempenhoTransportadoras historico={cotacoesFiltradas} />
+
+      {/* Depois, o gráfico do histórico mensal */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
@@ -267,9 +269,6 @@ const Reports = ({ historico }: ReportsProps) => {
           )}
         </CardContent>
       </Card>
-
-      {/* Desempenho das Transportadoras */}
-      <DesempenhoTransportadoras historico={cotacoesFiltradas} />
     </div>
   );
 };
