@@ -217,6 +217,45 @@ export type Database = {
           },
         ]
       }
+      transportadoras_cadastros: {
+        Row: {
+          created_at: string | null
+          deleted_at: string | null
+          email1: string | null
+          email2: string | null
+          id: string
+          nome: string
+          telefone1: string | null
+          telefone2: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          deleted_at?: string | null
+          email1?: string | null
+          email2?: string | null
+          id?: string
+          nome: string
+          telefone1?: string | null
+          telefone2?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          deleted_at?: string | null
+          email1?: string | null
+          email2?: string | null
+          id?: string
+          nome?: string
+          telefone1?: string | null
+          telefone2?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       users: {
         Row: {
           created_at: string | null

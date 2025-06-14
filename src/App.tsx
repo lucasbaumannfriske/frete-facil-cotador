@@ -10,6 +10,7 @@ import Cadastro from "./pages/Cadastro";
 import Reports from "./pages/Reports";
 import Usuarios from "./pages/Usuarios";
 import NotFound from "./pages/NotFound";
+import TransportadorasPage from "./pages/Transportadoras";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +26,7 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/cadastro" element={<Cadastro />} />
               <Route path="/reports" element={<Reports />} />
+              <Route path="/transportadoras" element={<TransportadorasPage />} />
               <Route path="/usuarios" element={<Usuarios />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
