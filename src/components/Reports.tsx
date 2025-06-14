@@ -21,23 +21,34 @@ interface ReportsProps {
 }
 
 const Reports = ({ historico }: ReportsProps) => {
-  // Apenas dois filtros: dataInicio e dataFim
-  const [dataInicio, setDataInicio] = useState<Date | undefined>(new Date(new Date().setMonth(new Date().getMonth() - 3)));
-  const [dataFim, setDataFim] = useState<Date | undefined>(new Date());
+  // Draft states para os calendários
+  const [draftDataInicio, setDraftDataInicio] = useState<Date | undefined>(new Date(new Date().setMonth(new Date().getMonth() - 3)));
+  const [draftDataFim, setDraftDataFim] = useState<Date | undefined>(new Date());
+  // States realmente usados para filtrar
+  const [dataInicio, setDataInicio] = useState<Date | undefined>(draftDataInicio);
+  const [dataFim, setDataFim] = useState<Date | undefined>(draftDataFim);
 
-  // Função para formatar string dd/mm/yyyy para Date
-  const formatDate = (dateString: string): Date | undefined => {
-    if (!dateString || typeof dateString !== "string") return undefined;
-    const parts = dateString.split('/');
-    if (parts.length !== 3) return undefined;
-    const [dd, mm, yyyy] = parts;
-    if (!dd || !mm || !yyyy) return undefined;
-    const parsed = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
-    if (isNaN(parsed.getTime())) return undefined;
-    return parsed;
+  // Função robusta para converter data em string para Date. Suporta "YYYY-MM-DD" e "DD/MM/YYYY"
+  const parseDate = (dateString: string): Date | undefined => {
+    if (!dateString) return undefined;
+    // Detectar formato YYYY-MM-DD (do banco)
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) {
+      const [yyyy, mm, dd] = dateString.split("-");
+      const parsed = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
+      if (isNaN(parsed.getTime())) return undefined;
+      return parsed;
+    }
+    // Detectar formato DD/MM/YYYY (usuário antigo)
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) {
+      const [dd, mm, yyyy] = dateString.split("/");
+      const parsed = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
+      if (isNaN(parsed.getTime())) return undefined;
+      return parsed;
+    }
+    return undefined;
   };
 
-  // Filtrar apenas pelo intervalo de datas
+  // Só filtra quando clica no botão "Aplicar Filtros"
   const cotacoesFiltradas = useMemo(() => {
     let filtradas = historico;
     if (dataInicio && dataFim) {
@@ -46,7 +57,7 @@ const Reports = ({ historico }: ReportsProps) => {
       const fim = new Date(dataFim);
       fim.setHours(23, 59, 59, 999);
       filtradas = filtradas.filter((c) => {
-        const dataC = formatDate(c.data);
+        const dataC = parseDate(c.data);
         if (!dataC) return false;
         return dataC >= inicio && dataC <= fim;
       });
@@ -93,10 +104,10 @@ const Reports = ({ historico }: ReportsProps) => {
       );
       if (!isAprovado) return;
 
-      const dataCot = formatDate(cotacao.data);
+      const dataCot = parseDate(cotacao.data);
       if (!dataCot) return;
       // chave: AAAA-MM
-      const key = format(dataCot, "yyyy-MM");
+      const key = `${dataCot.getFullYear()}-${String(dataCot.getMonth() + 1).padStart(2, '0')}`;
       // valor aprovado nesta cotação
       const valorCot = cotacao.transportadoras
         .filter((t) => t.status && t.status.toLowerCase() === "aprovado")
@@ -112,7 +123,7 @@ const Reports = ({ historico }: ReportsProps) => {
     return Object.keys(meses)
       .sort()
       .map((key) => ({
-        mes: format(new Date(key + "-01"), "MM/yyyy"),
+        mes: key.slice(5, 7) + "/" + key.slice(0, 4),
         valorAprovado: meses[key],
       }));
   }, [cotacoesFiltradas]);
@@ -130,7 +141,7 @@ const Reports = ({ historico }: ReportsProps) => {
         </div>
       </div>
 
-      {/* Filtros: Apenas datas */}
+      {/* Filtros: com botão de aplicar */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
@@ -139,51 +150,66 @@ const Reports = ({ historico }: ReportsProps) => {
         </CardHeader>
         <CardContent>
           <div className="flex flex-col sm:flex-row gap-4">
+            {/* Data Início */}
             <div className="space-y-2 w-full sm:w-1/3">
               <Label className="text-sm font-medium">Data Início</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="w-full justify-start text-left font-normal">
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dataInicio ? format(dataInicio, "dd/MM/yyyy") : "Selecionar"}
+                    {draftDataInicio ? format(draftDataInicio, "dd/MM/yyyy") : "Selecionar"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
                     mode="single"
-                    selected={dataInicio}
-                    onSelect={setDataInicio}
+                    selected={draftDataInicio}
+                    onSelect={setDraftDataInicio}
                     locale={ptBR}
                     className="pointer-events-auto"
                   />
                 </PopoverContent>
               </Popover>
             </div>
+            {/* Data Fim */}
             <div className="space-y-2 w-full sm:w-1/3">
               <Label className="text-sm font-medium">Data Fim</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" className="w-full justify-start text-left font-normal">
                     <CalendarIcon className="mr-2 h-4 w-4" />
-                    {dataFim ? format(dataFim, "dd/MM/yyyy") : "Selecionar"}
+                    {draftDataFim ? format(draftDataFim, "dd/MM/yyyy") : "Selecionar"}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
                     mode="single"
-                    selected={dataFim}
-                    onSelect={setDataFim}
+                    selected={draftDataFim}
+                    onSelect={setDraftDataFim}
                     locale={ptBR}
                     className="pointer-events-auto"
                   />
                 </PopoverContent>
               </Popover>
             </div>
-            <div className="flex items-end w-full sm:w-1/3">
+            {/* Botão APLICAR FILTROS */}
+            <div className="flex items-end w-full sm:w-1/3 gap-2">
+              <Button
+                variant="default"
+                className="w-1/2"
+                onClick={() => {
+                  setDataInicio(draftDataInicio);
+                  setDataFim(draftDataFim);
+                }}
+              >
+                Aplicar Filtros
+              </Button>
               <Button
                 variant="outline"
-                className="w-full"
+                className="w-1/2"
                 onClick={() => {
+                  setDraftDataInicio(undefined);
+                  setDraftDataFim(undefined);
                   setDataInicio(undefined);
                   setDataFim(undefined);
                 }}
