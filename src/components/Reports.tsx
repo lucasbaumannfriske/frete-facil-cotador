@@ -1,46 +1,32 @@
+
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Calendar } from "@/components/ui/calendar";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ResponsiveContainer,
-} from "recharts";
-import { 
-  Calendar as CalendarIcon, 
-  FilterIcon, 
-  TrendingUp, 
-  CheckCircle, 
-  Clock, 
-  XCircle,
-  BarChart3 
+  Calendar as CalendarIcon,
+  TrendingUp,
+  CheckCircle,
+  BarChart3,
 } from "lucide-react";
 import { CotacaoSalva } from "@/types";
 import DesempenhoTransportadoras from "./DesempenhoTransportadoras";
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 
 interface ReportsProps {
   historico: CotacaoSalva[];
 }
 
 const Reports = ({ historico }: ReportsProps) => {
-  const [periodoFiltro, setPeriodoFiltro] = useState<"diario" | "mensal" | "anual">("mensal");
-  const [statusFiltro, setStatusFiltro] = useState<"todos" | "aprovado" | "pendente" | "rejeitado">("todos");
+  // Apenas dois filtros: dataInicio e dataFim
   const [dataInicio, setDataInicio] = useState<Date | undefined>(new Date(new Date().setMonth(new Date().getMonth() - 3)));
   const [dataFim, setDataFim] = useState<Date | undefined>(new Date());
 
-  // Função para formatar string dd/mm/yyyy para objeto Date OU retornar undefined se inválida
+  // Função para formatar string dd/mm/yyyy para Date
   const formatDate = (dateString: string): Date | undefined => {
     if (!dateString || typeof dateString !== "string") return undefined;
     const parts = dateString.split('/');
@@ -48,61 +34,39 @@ const Reports = ({ historico }: ReportsProps) => {
     const [dd, mm, yyyy] = parts;
     if (!dd || !mm || !yyyy) return undefined;
     const parsed = new Date(Number(yyyy), Number(mm) - 1, Number(dd));
-    // Verifica se a data é válida
     if (isNaN(parsed.getTime())) return undefined;
     return parsed;
   };
 
-  // Corrige o filtro para considerar todo o dia final
+  // Filtrar apenas pelo intervalo de datas
   const cotacoesFiltradas = useMemo(() => {
     let filtradas = historico;
-
     if (dataInicio && dataFim) {
-      const dataInicioZ = new Date(dataInicio);
-      dataInicioZ.setHours(0, 0, 0, 0);
-      const dataFimZ = new Date(dataFim);
-      dataFimZ.setHours(23, 59, 59, 999);
-
-      // Debug log para conferir datas
-      console.log("Filtro de datas:", {
-        dataInicioZ: dataInicioZ.toISOString(),
-        dataFimZ: dataFimZ.toISOString(),
-        cotacoesConvertidas: historico.map((c) => ({
-          id: c.id,
-          dataRaw: c.data,
-          dataDate: formatDate(c.data)?.toISOString() ?? "inválido"
-        }))
-      });
-
+      const inicio = new Date(dataInicio);
+      inicio.setHours(0, 0, 0, 0);
+      const fim = new Date(dataFim);
+      fim.setHours(23, 59, 59, 999);
       filtradas = filtradas.filter((c) => {
         const dataC = formatDate(c.data);
-        if (!dataC) return false; // Ignorar se falhou a conversão
-        return dataC >= dataInicioZ && dataC <= dataFimZ;
+        if (!dataC) return false;
+        return dataC >= inicio && dataC <= fim;
       });
     }
-
-    if (statusFiltro !== "todos") {
-      filtradas = filtradas.filter((c) =>
-        c.transportadoras.some(
-          (t) => t.status && t.status.toLowerCase() === statusFiltro
-        )
-      );
-    }
-
     return filtradas;
-  }, [historico, dataInicio, dataFim, statusFiltro]);
+  }, [historico, dataInicio, dataFim]);
 
-  // KPIs: só cotações aprovadas
-  const totalCotacoesAprovadas = useMemo(() =>
-    cotacoesFiltradas.filter((c) =>
-      c.transportadoras.some(
-        (t) => t.status && t.status.toLowerCase() === "aprovado"
-      )
-    ).length,
+  // KPIs: Somente cotações com status aprovado
+  const totalCotacoesAprovadas = useMemo(
+    () =>
+      cotacoesFiltradas.filter((c) =>
+        c.transportadoras.some(
+          (t) => t.status && t.status.toLowerCase() === "aprovado"
+        )
+      ).length,
     [cotacoesFiltradas]
   );
 
-  const totalAprovado = useMemo(
+  const valorTotalAprovado = useMemo(
     () =>
       cotacoesFiltradas.reduce((total, cotacao) => {
         const totalAprovadosPorCot = cotacao.transportadoras
@@ -118,58 +82,65 @@ const Reports = ({ historico }: ReportsProps) => {
     [cotacoesFiltradas]
   );
 
+  // Dados mensais para gráfico: [{ mes: "06/2024", valorAprovado: X }, ...]
+  const historicoMensal = useMemo(() => {
+    // { 'YYYY-MM': valorTotal }
+    const meses: { [key: string]: number } = {};
+
+    cotacoesFiltradas.forEach((cotacao) => {
+      // considerar APENAS OS APROVADOS
+      const isAprovado = cotacao.transportadoras.some(
+        (t) => t.status && t.status.toLowerCase() === "aprovado"
+      );
+      if (!isAprovado) return;
+
+      const dataCot = formatDate(cotacao.data);
+      if (!dataCot) return;
+      // chave: AAAA-MM
+      const key = format(dataCot, "yyyy-MM");
+      // valor aprovado nesta cotação
+      const valorCot = cotacao.transportadoras
+        .filter((t) => t.status && t.status.toLowerCase() === "aprovado")
+        .reduce(
+          (soma, t) =>
+            soma + (parseFloat(t.propostaFinal || t.valorTotal || "0") || 0),
+          0
+        );
+      meses[key] = (meses[key] || 0) + valorCot;
+    });
+
+    // Ordena os meses crescentes e formata para [{ mes: "MM/yyyy", valorAprovado }]
+    return Object.keys(meses)
+      .sort()
+      .map((key) => ({
+        mes: format(new Date(key + "-01"), "MM/yyyy"),
+        valorAprovado: meses[key],
+      }));
+  }, [cotacoesFiltradas]);
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* Header */}
       <div className="flex items-center gap-3 mb-6">
         <div className="p-2 bg-primary/10 rounded-lg">
           <BarChart3 className="h-6 w-6 text-primary" />
         </div>
         <div>
           <h2 className="text-2xl font-bold">Relatórios e Análises</h2>
-          <p className="text-muted-foreground">Acompanhe o desempenho das cotações</p>
+          <p className="text-muted-foreground">KPIs e desempenho de acordo com o período selecionado</p>
         </div>
       </div>
 
-      {/* Filtros */}
+      {/* Filtros: Apenas datas */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-lg">
-            <FilterIcon className="h-5 w-5" />
-            Filtros
+            Filtros por Período
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="periodo" className="text-sm font-medium">Período</Label>
-              <Select value={periodoFiltro} onValueChange={(value: any) => setPeriodoFiltro(value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecionar" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="diario">Diário</SelectItem>
-                  <SelectItem value="mensal">Mensal</SelectItem>
-                  <SelectItem value="anual">Anual</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="status" className="text-sm font-medium">Status</Label>
-              <Select value={statusFiltro} onValueChange={(value: any) => setStatusFiltro(value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecionar" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos</SelectItem>
-                  <SelectItem value="aprovado">Aprovados</SelectItem>
-                  <SelectItem value="pendente">Pendentes</SelectItem>
-                  <SelectItem value="rejeitado">Rejeitados</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="space-y-2 w-full sm:w-1/3">
               <Label className="text-sm font-medium">Data Início</Label>
               <Popover>
                 <PopoverTrigger asChild>
@@ -184,12 +155,12 @@ const Reports = ({ historico }: ReportsProps) => {
                     selected={dataInicio}
                     onSelect={setDataInicio}
                     locale={ptBR}
+                    className="pointer-events-auto"
                   />
                 </PopoverContent>
               </Popover>
             </div>
-
-            <div className="space-y-2">
+            <div className="space-y-2 w-full sm:w-1/3">
               <Label className="text-sm font-medium">Data Fim</Label>
               <Popover>
                 <PopoverTrigger asChild>
@@ -204,23 +175,20 @@ const Reports = ({ historico }: ReportsProps) => {
                     selected={dataFim}
                     onSelect={setDataFim}
                     locale={ptBR}
+                    className="pointer-events-auto"
                   />
                 </PopoverContent>
               </Popover>
             </div>
-
-            <div className="space-y-2">
-              <Label className="text-sm font-medium">Ações</Label>
-              <Button 
-                variant="outline" 
-                className="w-full" 
+            <div className="flex items-end w-full sm:w-1/3">
+              <Button
+                variant="outline"
+                className="w-full"
                 onClick={() => {
                   setDataInicio(undefined);
                   setDataFim(undefined);
-                  setStatusFiltro("todos");
                 }}
               >
-                <FilterIcon className="mr-2 h-4 w-4" />
                 Limpar Filtros
               </Button>
             </div>
@@ -228,8 +196,8 @@ const Reports = ({ historico }: ReportsProps) => {
         </CardContent>
       </Card>
 
-      {/* Cards de métricas (apenas os dois KPIs solicitados) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
+      {/* KPIs */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card className="border-l-4 border-l-blue-500">
           <CardContent className="p-6">
             <div className="flex items-center gap-3">
@@ -247,7 +215,6 @@ const Reports = ({ historico }: ReportsProps) => {
             </div>
           </CardContent>
         </Card>
-
         <Card className="border-l-4 border-l-green-500">
           <CardContent className="p-6">
             <div className="flex items-center gap-3">
@@ -260,7 +227,7 @@ const Reports = ({ historico }: ReportsProps) => {
                 </p>
                 <p className="text-2xl font-bold text-green-600">
                   R${" "}
-                  {totalAprovado.toLocaleString("pt-BR", {
+                  {valorTotalAprovado.toLocaleString("pt-BR", {
                     minimumFractionDigits: 2,
                   })}
                 </p>
@@ -270,7 +237,38 @@ const Reports = ({ historico }: ReportsProps) => {
         </Card>
       </div>
 
-      {/* Seção Desempenho das Transportadoras (usando dados filtrados e atualizados conforme os filtros) */}
+      {/* Gráfico: Histórico Mensal do Valor Total Aprovado */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            Histórico Mensal do Valor Total Aprovado
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {historicoMensal.length === 0 ? (
+            <div className="text-muted-foreground text-center py-8">
+              Nenhum dado aprovado no período selecionado.
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={historicoMensal}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="mes" />
+                <YAxis
+                  tickFormatter={v => "R$ " + v.toLocaleString("pt-BR", { minimumFractionDigits: 0 })}
+                />
+                <Tooltip 
+                  formatter={v => "R$ " + Number(v).toLocaleString("pt-BR", {minimumFractionDigits:2})}
+                  labelFormatter={label => `Mês: ${label}`}
+                />
+                <Bar dataKey="valorAprovado" fill="#22c55e" name="Valor Total Aprovado" />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Desempenho das Transportadoras */}
       <DesempenhoTransportadoras historico={cotacoesFiltradas} />
     </div>
   );
