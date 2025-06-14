@@ -15,6 +15,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import Navigation from "@/components/Navigation";
 import { useCotacoes } from "@/hooks/useCotacoes";
 
+const getDataLocalFormat = () => {
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const dd = String(now.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+};
+
 const Index = () => {
   // Hook para gerenciar cotações no Supabase
   const { cotacoes, loading, salvarCotacao: salvarCotacaoSupabase } = useCotacoes();
@@ -103,7 +111,8 @@ const Index = () => {
     const novaCotacao = {
       cliente,
       fazenda,
-      data: new Date().toISOString().split('T')[0], // Gera data no formato YYYY-MM-DD
+      // Corrigido: salvar a data local (YYYY-MM-DD)
+      data: getDataLocalFormat(),
       endereco,
       cidade,
       estado,
