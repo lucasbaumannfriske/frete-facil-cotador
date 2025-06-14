@@ -23,6 +23,7 @@ export const TransportadoraCombobox: React.FC<TransportadoraComboboxProps> = ({
       onChange={(e) => onChange(e.target.value)}
       disabled={disabled}
     >
+      <option value="">Selecione...</option>
       {options.map((option) => (
         <option key={option.id} value={option.id}>
           {option.nome}
@@ -31,4 +32,3 @@ export const TransportadoraCombobox: React.FC<TransportadoraComboboxProps> = ({
     </select>
   );
 };
-
