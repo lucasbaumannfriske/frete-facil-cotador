@@ -250,19 +250,6 @@ const HistoricoCotacoes = ({ cotacoes, loading = false }: HistoricoCotacoesProps
                               <p className="mt-1 text-sm">{currentData.cidade}</p>
                             )}
                           </div>
-                          
-                          <div>
-                            <label className="text-sm font-medium">Estado:</label>
-                            {isEditing ? (
-                              <Input
-                                value={currentData.estado || ""}
-                                onChange={(e) => updateField('estado', e.target.value)}
-                                className="mt-1"
-                              />
-                            ) : (
-                              <p className="mt-1 text-sm">{currentData.estado}</p>
-                            )}
-                          </div>
                         </div>
                       </div>
                       
