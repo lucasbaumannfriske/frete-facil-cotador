@@ -12,6 +12,7 @@ const initialForm: Omit<TransportadoraCadastro, "id" | "created_at" | "updated_a
   email2: "",
   telefone1: "",
   telefone2: "",
+  cnpj: "",
 };
 
 // Função utilitária para aplicar a máscara ao digitar telefone
@@ -47,6 +48,28 @@ function maskTelefone(valor: string) {
   }
 }
 
+// Função utilitária para aplicar a máscara ao digitar CNPJ
+function maskCNPJ(valor: string) {
+  // Remove tudo que não seja dígito
+  const digits = valor.replace(/\D/g, "");
+  if (digits.length === 0) return "";
+  // CNPJ: 00.000.000/0000-00
+  return digits
+    .replace(/^(\d{0,2})(\d{0,3})(\d{0,3})(\d{0,4})(\d{0,2}).*/, function (_, p1, p2, p3, p4, p5) {
+      let out = "";
+      if (p1) out += p1;
+      if (p1 && p1.length === 2) out += ".";
+      if (p2) out += p2;
+      if (p2 && p2.length === 3) out += ".";
+      if (p3) out += p3;
+      if (p3 && p3.length === 3) out += "/";
+      if (p4) out += p4;
+      if (p4 && p4.length === 4) out += "-";
+      if (p5) out += p5;
+      return out;
+    });
+}
+
 export default function TransportadorasGestao() {
   const [editing, setEditing] = useState<string | null>(null);
   const [form, setForm] = useState(initialForm);
@@ -64,6 +87,8 @@ export default function TransportadorasGestao() {
     // Se for telefone, aplicar máscara
     if (name === "telefone1" || name === "telefone2") {
       setForm({ ...form, [name]: maskTelefone(value) });
+    } else if (name === "cnpj") {
+      setForm({ ...form, [name]: maskCNPJ(value) });
     } else {
       setForm({ ...form, [name]: value });
     }
@@ -89,6 +114,7 @@ export default function TransportadorasGestao() {
       email2: t.email2 || "",
       telefone1: t.telefone1 || "",
       telefone2: t.telefone2 || "",
+      cnpj: t.cnpj || "",
     });
     setEditing(t.id);
   };
@@ -117,6 +143,7 @@ export default function TransportadorasGestao() {
           <h2 className="font-semibold text-xl mb-4">{editing ? "Editar Transportadora" : "Cadastrar Transportadora"}</h2>
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input name="nome" value={form.nome} onChange={handleChange} required placeholder="Nome da transportadora" />
+            <Input name="cnpj" value={form.cnpj} onChange={handleChange} placeholder="CNPJ" maxLength={18} />
             <div className="flex gap-2">
               <Input name="email1" type="email" value={form.email1} onChange={handleChange} placeholder="E-mail 1" />
               <Input name="email2" type="email" value={form.email2} onChange={handleChange} placeholder="E-mail 2" />
@@ -144,6 +171,7 @@ export default function TransportadorasGestao() {
               <Card key={t.id} className="flex items-center gap-4 p-4 justify-between">
                 <div className="flex-1">
                   <div className="font-bold">{t.nome}</div>
+                  {t.cnpj && <div className="text-sm text-muted-foreground">CNPJ: {t.cnpj}</div>}
                   <div className="text-xs text-muted-foreground">
                     {t.email1} {t.email2 && <>&bull; {t.email2}</>}
                     {(t.telefone1 || t.telefone2) && (
