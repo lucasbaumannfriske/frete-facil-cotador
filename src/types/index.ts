@@ -14,7 +14,8 @@ export interface Transportadora {
   valorUnitario: string;
   valorTotal: string;
   status: string;
-  propostaFinal?: string; // Adicionado campo para proposta final
+  propostaFinal?: string;
+  quantidadeEntregue?: string;
 }
 
 export interface CotacaoSalva {

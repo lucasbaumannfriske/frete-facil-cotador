@@ -26,7 +26,7 @@ export const TransportadoraCombobox: React.FC<TransportadoraComboboxProps> = ({
       <option value="">Selecione...</option>
       {options.map((option) => (
         <option key={option.id} value={option.id}>
-          {option.nome}
+          {option.nome}{option.cnpj ? ` - ${option.cnpj}` : ''}
         </option>
       ))}
     </select>

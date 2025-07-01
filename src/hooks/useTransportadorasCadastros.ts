@@ -10,6 +10,7 @@ export interface TransportadoraCadastro {
   email2: string;
   telefone1: string;
   telefone2: string;
+  cnpj?: string;
   created_at?: string;
   updated_at?: string;
 }

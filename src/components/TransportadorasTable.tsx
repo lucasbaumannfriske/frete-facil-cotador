@@ -72,7 +72,7 @@ const TransportadorasTable = ({ transportadoras, setTransportadoras, calcularTot
           <TableHeader>
             <TableRow>
               <TableHead>Transportadora</TableHead>
-              <TableHead>Prazo</TableHead>
+              <TableHead>Prazo de Entrega</TableHead>
               <TableHead>Valor Unitário</TableHead>
               <TableHead>Total</TableHead>
               <TableHead>Status</TableHead>
@@ -94,7 +94,7 @@ const TransportadorasTable = ({ transportadoras, setTransportadoras, calcularTot
                   <Input
                     value={t.prazo}
                     onChange={e => handleInputChange(idx, "prazo", e.target.value)}
-                    placeholder="Prazo"
+                    placeholder="Prazo de Entrega"
                   />
                 </TableCell>
                 <TableCell>

@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
@@ -354,7 +355,7 @@ const HistoricoCotacoes = ({ cotacoes, loading = false }: HistoricoCotacoesProps
                       </div>
                     </div>
 
-                    {/* Transportadoras - Corrigido para mostrar valor total */}
+                    {/* Transportadoras */}
                     <div className="mb-4">
                       <h4 className="font-medium mb-2 flex items-center gap-2">
                         <TruckIcon className="h-4 w-4 text-primary" />
@@ -363,7 +364,7 @@ const HistoricoCotacoes = ({ cotacoes, loading = false }: HistoricoCotacoesProps
                       <div className="space-y-3">
                         {currentData.transportadoras.map((transp, idx) => (
                           <div key={idx} className="p-3 bg-background rounded border">
-                            <div className="grid grid-cols-1 md:grid-cols-6 gap-3">
+                            <div className="grid grid-cols-1 md:grid-cols-7 gap-3">
                               <div>
                                 <label className="text-xs text-muted-foreground">Nome:</label>
                                 {isEditing ? (
@@ -378,7 +379,7 @@ const HistoricoCotacoes = ({ cotacoes, loading = false }: HistoricoCotacoesProps
                               </div>
                               
                               <div>
-                                <label className="text-xs text-muted-foreground">Prazo:</label>
+                                <label className="text-xs text-muted-foreground">Prazo de Coleta:</label>
                                 {isEditing ? (
                                   <Input
                                     value={transp.prazo || ""}
@@ -434,6 +435,22 @@ const HistoricoCotacoes = ({ cotacoes, loading = false }: HistoricoCotacoesProps
                                 ) : (
                                   <p className="mt-1 text-sm font-bold text-blue-600">
                                     {transp.propostaFinal ? `R$ ${transp.propostaFinal}` : "N/A"}
+                                  </p>
+                                )}
+                              </div>
+                              
+                              <div>
+                                <label className="text-xs text-muted-foreground">Qtd Entregue:</label>
+                                {isEditing ? (
+                                  <Input
+                                    value={transp.quantidadeEntregue || ""}
+                                    onChange={(e) => updateTransportadora(idx, 'quantidadeEntregue', e.target.value)}
+                                    className="mt-1"
+                                    placeholder="Quantidade"
+                                  />
+                                ) : (
+                                  <p className="mt-1 text-sm">
+                                    {transp.quantidadeEntregue || "N/A"}
                                   </p>
                                 )}
                               </div>

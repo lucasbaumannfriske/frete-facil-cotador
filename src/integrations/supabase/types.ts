@@ -176,6 +176,7 @@ export type Database = {
           nome: string
           prazo: string | null
           proposta_final: string | null
+          quantidade_entregue: string | null
           status: string | null
           user_id: string
           valor_total: string | null
@@ -189,6 +190,7 @@ export type Database = {
           nome: string
           prazo?: string | null
           proposta_final?: string | null
+          quantidade_entregue?: string | null
           status?: string | null
           user_id: string
           valor_total?: string | null
@@ -202,6 +204,7 @@ export type Database = {
           nome?: string
           prazo?: string | null
           proposta_final?: string | null
+          quantidade_entregue?: string | null
           status?: string | null
           user_id?: string
           valor_total?: string | null
@@ -219,6 +222,7 @@ export type Database = {
       }
       transportadoras_cadastros: {
         Row: {
+          cnpj: string | null
           created_at: string | null
           deleted_at: string | null
           email1: string | null
@@ -231,6 +235,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          cnpj?: string | null
           created_at?: string | null
           deleted_at?: string | null
           email1?: string | null
@@ -243,6 +248,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          cnpj?: string | null
           created_at?: string | null
           deleted_at?: string | null
           email1?: string | null
