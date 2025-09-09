@@ -42,8 +42,8 @@ const ProdutosTable = ({
         quantidade: 1,
         peso: "",
         embalagem: "",
-        safra_id: "",
-        grupo_id: "",
+        safra_id: "none",
+        grupo_id: "none",
       },
     ]);
   };
@@ -105,7 +105,7 @@ const ProdutosTable = ({
                       <SelectValue placeholder="Selecionar safra" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Nenhuma</SelectItem>
+                      <SelectItem value="none">Nenhuma</SelectItem>
                       {safras.map((safra) => (
                         <SelectItem key={safra.id} value={safra.id}>
                           {safra.nome}
@@ -125,7 +125,7 @@ const ProdutosTable = ({
                       <SelectValue placeholder="Selecionar grupo" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Nenhum</SelectItem>
+                      <SelectItem value="none">Nenhum</SelectItem>
                       {grupos.map((grupo) => (
                         <SelectItem key={grupo.id} value={grupo.id}>
                           {grupo.nome}

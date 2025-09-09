@@ -44,7 +44,7 @@ const Index = () => {
 
   // Estado para produtos e transportadoras
   const [produtos, setProdutos] = useState<Produto[]>([
-    { id: "1", nome: "", quantidade: 1, peso: "", embalagem: "", safra_id: "", grupo_id: "" },
+    { id: "1", nome: "", quantidade: 1, peso: "", embalagem: "", safra_id: "none", grupo_id: "none" },
   ]);
   const [transportadoras, setTransportadoras] = useState<Transportadora[]>([
     { id: "1", nome: "", prazo: "", valorUnitario: "", valorTotal: "", status: "Pendente", propostaFinal: "" },
@@ -144,7 +144,7 @@ const Index = () => {
     setCep("");
     setFazenda("");
     setObservacoes("");
-    setProdutos([{ id: "1", nome: "", quantidade: 1, peso: "", embalagem: "", safra_id: "", grupo_id: "" }]);
+    setProdutos([{ id: "1", nome: "", quantidade: 1, peso: "", embalagem: "", safra_id: "none", grupo_id: "none" }]);
     setTransportadoras([
       { id: "1", nome: "", prazo: "", valorUnitario: "", valorTotal: "", status: "Pendente", propostaFinal: "" },
     ]);
