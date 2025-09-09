@@ -2,7 +2,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { ChartBarIcon } from "lucide-react";
 import Reports from "@/components/Reports";
-import Navigation from "@/components/Navigation";
 import { useCotacoes } from "@/hooks/useCotacoes";
 import { TruckIcon } from "lucide-react";
 
@@ -11,9 +10,7 @@ const ReportsPage = () => {
 
   if (loading) {
     return (
-      <div>
-        <Navigation />
-        <div className="container max-w-6xl py-8">
+      <div className="container max-w-6xl py-8">
           <div className="flex items-center justify-center gap-3 mb-6">
             <ChartBarIcon className="h-8 w-8 text-primary" />
             <h1 className="text-3xl font-bold text-center">Relatórios e Análises</h1>
@@ -25,16 +22,13 @@ const ReportsPage = () => {
                 <p className="text-muted-foreground">Carregando dados dos relatórios...</p>
               </div>
             </CardContent>
-          </Card>
-        </div>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div>
-      <Navigation />
-      <div className="container max-w-6xl py-8">
+    <div className="container max-w-6xl py-8">
         <div className="flex items-center justify-center gap-3 mb-6">
           <ChartBarIcon className="h-8 w-8 text-primary" />
           <h1 className="text-3xl font-bold text-center">Relatórios e Análises</h1>
@@ -44,8 +38,7 @@ const ReportsPage = () => {
           <CardContent className="p-8">
             <Reports historico={historico} />
           </CardContent>
-        </Card>
-      </div>
+      </Card>
     </div>
   );
 };

@@ -5,6 +5,8 @@ export interface Produto {
   quantidade: number;
   peso: string;
   embalagem: string;
+  safra_id?: string;
+  grupo_id?: string;
 }
 
 export interface Transportadora {

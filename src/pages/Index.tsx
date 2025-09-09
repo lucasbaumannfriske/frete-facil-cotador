@@ -12,7 +12,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { PackageIcon, TruckIcon } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import Navigation from "@/components/Navigation";
 import { useCotacoes } from "@/hooks/useCotacoes";
 
 const getDataLocalFormat = () => {
@@ -45,7 +44,7 @@ const Index = () => {
 
   // Estado para produtos e transportadoras
   const [produtos, setProdutos] = useState<Produto[]>([
-    { id: "1", nome: "", quantidade: 1, peso: "", embalagem: "" },
+    { id: "1", nome: "", quantidade: 1, peso: "", embalagem: "", safra_id: "", grupo_id: "" },
   ]);
   const [transportadoras, setTransportadoras] = useState<Transportadora[]>([
     { id: "1", nome: "", prazo: "", valorUnitario: "", valorTotal: "", status: "Pendente", propostaFinal: "" },
@@ -145,7 +144,7 @@ const Index = () => {
     setCep("");
     setFazenda("");
     setObservacoes("");
-    setProdutos([{ id: "1", nome: "", quantidade: 1, peso: "", embalagem: "" }]);
+    setProdutos([{ id: "1", nome: "", quantidade: 1, peso: "", embalagem: "", safra_id: "", grupo_id: "" }]);
     setTransportadoras([
       { id: "1", nome: "", prazo: "", valorUnitario: "", valorTotal: "", status: "Pendente", propostaFinal: "" },
     ]);
@@ -163,9 +162,7 @@ const Index = () => {
   };
 
   return (
-    <div>
-      <Navigation />
-      <div className="container max-w-6xl py-8">
+    <div className="container max-w-6xl py-8">
         <div className="flex items-center justify-center gap-3 mb-6">
           <TruckIcon className="h-8 w-8 text-primary" />
           <h1 className="text-3xl font-bold text-center">Planilha de Cotação de Frete</h1>
@@ -259,7 +256,6 @@ const Index = () => {
           produtos={produtos}
           observacoes={observacoes}
         />
-      </div>
     </div>
   );
 };

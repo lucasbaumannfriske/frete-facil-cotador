@@ -9,7 +9,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Produto } from "@/types";
+import { useSafras } from "@/hooks/useSafras";
+import { useGrupos } from "@/hooks/useGrupos";
 
 interface ProdutosTableProps {
   produtos: Produto[];
@@ -22,6 +31,8 @@ const ProdutosTable = ({
   setProdutos,
   atualizarTotais,
 }: ProdutosTableProps) => {
+  const { safras } = useSafras();
+  const { grupos } = useGrupos();
   const adicionarProduto = () => {
     setProdutos([
       ...produtos,
@@ -31,6 +42,8 @@ const ProdutosTable = ({
         quantidade: 1,
         peso: "",
         embalagem: "",
+        safra_id: "",
+        grupo_id: "",
       },
     ]);
   };
@@ -60,6 +73,8 @@ const ProdutosTable = ({
           <TableHeader>
             <TableRow>
               <TableHead>Produto</TableHead>
+              <TableHead>Safra</TableHead>
+              <TableHead>Grupo</TableHead>
               <TableHead>Quantidade</TableHead>
               <TableHead>Peso (kg)</TableHead>
               <TableHead>Embalagem</TableHead>
@@ -78,6 +93,46 @@ const ProdutosTable = ({
                     }
                     placeholder="Nome do produto"
                   />
+                </TableCell>
+                <TableCell>
+                  <Select
+                    value={produto.safra_id}
+                    onValueChange={(value) =>
+                      atualizarProduto(produto.id, "safra_id", value)
+                    }
+                  >
+                    <SelectTrigger className="min-w-[120px]">
+                      <SelectValue placeholder="Selecionar safra" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Nenhuma</SelectItem>
+                      {safras.map((safra) => (
+                        <SelectItem key={safra.id} value={safra.id}>
+                          {safra.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </TableCell>
+                <TableCell>
+                  <Select
+                    value={produto.grupo_id}
+                    onValueChange={(value) =>
+                      atualizarProduto(produto.id, "grupo_id", value)
+                    }
+                  >
+                    <SelectTrigger className="min-w-[120px]">
+                      <SelectValue placeholder="Selecionar grupo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Nenhum</SelectItem>
+                      {grupos.map((grupo) => (
+                        <SelectItem key={grupo.id} value={grupo.id}>
+                          {grupo.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </TableCell>
                 <TableCell>
                   <Input
