@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { CotacaoSalva, Transportadora, Produto } from "@/types";
 import { StatusBadge } from "./StatusBadge";
+import CteManager from "./CteManager";
 import { 
   TruckIcon, 
   Edit, 
@@ -29,6 +30,8 @@ import {
   CollapsibleTrigger 
 } from "@/components/ui/collapsible";
 import { useCotacoes } from "@/hooks/useCotacoes";
+import { useSafras } from "@/hooks/useSafras";
+import { useGrupos } from "@/hooks/useGrupos";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -39,6 +42,8 @@ interface HistoricoCotacoesProps {
 
 const HistoricoCotacoes = ({ cotacoes, loading = false }: HistoricoCotacoesProps) => {
   const { atualizarCotacao, deletarCotacao } = useCotacoes();
+  const { safras } = useSafras();
+  const { grupos } = useGrupos();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editData, setEditData] = useState<CotacaoSalva | null>(null);
@@ -125,7 +130,9 @@ const HistoricoCotacoes = ({ cotacoes, loading = false }: HistoricoCotacoesProps
       nome: "",
       quantidade: 1,
       peso: "",
-      embalagem: ""
+      embalagem: "",
+      safra_id: "none",
+      grupo_id: "none",
     };
     setEditData({ ...editData, produtos: [...editData.produtos, newProduto] });
   };
@@ -317,6 +324,38 @@ const HistoricoCotacoes = ({ cotacoes, loading = false }: HistoricoCotacoesProps
                                   placeholder="Embalagem"
                                   className="w-32"
                                 />
+                                <Select
+                                  value={produto.safra_id || "none"}
+                                  onValueChange={(value) => updateProduto(idx, 'safra_id', value)}
+                                >
+                                  <SelectTrigger className="w-32">
+                                    <SelectValue placeholder="Safra" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="none">Nenhuma</SelectItem>
+                                    {safras.map((safra) => (
+                                      <SelectItem key={safra.id} value={safra.id}>
+                                        {safra.nome}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <Select
+                                  value={produto.grupo_id || "none"}
+                                  onValueChange={(value) => updateProduto(idx, 'grupo_id', value)}
+                                >
+                                  <SelectTrigger className="w-32">
+                                    <SelectValue placeholder="Grupo" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="none">Nenhum</SelectItem>
+                                    {grupos.map((grupo) => (
+                                      <SelectItem key={grupo.id} value={grupo.id}>
+                                        {grupo.nome}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
                                 <Button
                                   variant="destructive"
                                   size="icon"
@@ -340,6 +379,16 @@ const HistoricoCotacoes = ({ cotacoes, loading = false }: HistoricoCotacoesProps
                                 {produto.embalagem && (
                                   <span className="text-xs bg-secondary px-2 py-1 rounded">
                                     {produto.embalagem}
+                                  </span>
+                                )}
+                                {produto.safra_id && produto.safra_id !== "none" && (
+                                  <span className="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                                    Safra: {safras.find(s => s.id === produto.safra_id)?.nome || "N/A"}
+                                  </span>
+                                )}
+                                {produto.grupo_id && produto.grupo_id !== "none" && (
+                                  <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
+                                    Grupo: {grupos.find(g => g.id === produto.grupo_id)?.nome || "N/A"}
                                   </span>
                                 )}
                               </>
@@ -478,6 +527,15 @@ const HistoricoCotacoes = ({ cotacoes, loading = false }: HistoricoCotacoesProps
                                 )}
                               </div>
                             </div>
+
+                            {/* CTEs - Mostrar apenas quando status for Aprovado e não estiver editando */}
+                            {!isEditing && transp.status === "Aprovado" && (
+                              <CteManager 
+                                cotacaoId={cotacao.id}
+                                transportadoraId={transp.id}
+                                transportadoraNome={transp.nome}
+                              />
+                            )}
                           </div>
                         ))}
                       </div>
