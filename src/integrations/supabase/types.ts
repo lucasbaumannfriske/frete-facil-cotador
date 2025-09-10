@@ -107,6 +107,42 @@ export type Database = {
         }
         Relationships: []
       }
+      ctes: {
+        Row: {
+          arquivo_nome: string | null
+          arquivo_url: string | null
+          cotacao_id: string
+          created_at: string
+          id: string
+          numero_cte: string
+          transportadora_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          arquivo_nome?: string | null
+          arquivo_url?: string | null
+          cotacao_id: string
+          created_at?: string
+          id?: string
+          numero_cte: string
+          transportadora_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          arquivo_nome?: string | null
+          arquivo_url?: string | null
+          cotacao_id?: string
+          created_at?: string
+          id?: string
+          numero_cte?: string
+          transportadora_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       grupos: {
         Row: {
           created_at: string
