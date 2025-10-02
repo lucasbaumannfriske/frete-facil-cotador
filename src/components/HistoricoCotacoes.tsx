@@ -47,6 +47,7 @@ const HistoricoCotacoes = ({ cotacoes, loading = false }: HistoricoCotacoesProps
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editData, setEditData] = useState<CotacaoSalva | null>(null);
+  const [filtroCliente, setFiltroCliente] = useState<string>("");
   
   // Estado local para armazenar cotações atualizadas
   const [localCotacoes, setLocalCotacoes] = useState<CotacaoSalva[]>(cotacoes);
@@ -55,6 +56,11 @@ const HistoricoCotacoes = ({ cotacoes, loading = false }: HistoricoCotacoesProps
   React.useEffect(() => {
     setLocalCotacoes(cotacoes);
   }, [cotacoes]);
+
+  // Filtrar cotações por cliente
+  const cotacoesFiltradas = localCotacoes.filter(cotacao => 
+    cotacao.cliente.toLowerCase().includes(filtroCliente.toLowerCase())
+  );
 
   const toggleExpand = (id: string) => {
     setExpandedItems(prev => 
@@ -161,20 +167,30 @@ const HistoricoCotacoes = ({ cotacoes, loading = false }: HistoricoCotacoesProps
         <h2 className="text-xl font-bold">Histórico de Cotações</h2>
       </div>
       
+      <div className="mb-4">
+        <label className="text-sm font-medium mb-2 block">Filtrar por Tomador de Serviço:</label>
+        <Input
+          placeholder="Digite o nome do cliente..."
+          value={filtroCliente}
+          onChange={(e) => setFiltroCliente(e.target.value)}
+          className="max-w-md"
+        />
+      </div>
+      
       <ScrollArea className="h-[600px] pr-4">
-        {localCotacoes.length === 0 ? (
+        {cotacoesFiltradas.length === 0 ? (
           <div className="text-center py-12 bg-muted/20 rounded-lg border border-dashed">
             <TruckIcon className="h-12 w-12 text-muted-foreground mx-auto mb-3 opacity-50" />
             <p className="text-muted-foreground">
-              Nenhuma cotação salva ainda.
+              {filtroCliente ? "Nenhuma cotação encontrada com esse filtro." : "Nenhuma cotação salva ainda."}
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              As cotações salvas aparecerão aqui.
+              {filtroCliente ? "Tente ajustar o filtro de busca." : "As cotações salvas aparecerão aqui."}
             </p>
           </div>
         ) : (
           <div className="space-y-3">
-            {localCotacoes.map((cotacao) => {
+            {cotacoesFiltradas.map((cotacao) => {
               const isEditing = editingId === cotacao.id;
               const currentData = isEditing ? editData! : cotacao;
               
