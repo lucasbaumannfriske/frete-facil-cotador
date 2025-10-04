@@ -92,48 +92,48 @@ const DetalheCotacoesTable = ({ historico }: DetalheCotacoesTableProps) => {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <FileText className="h-5 w-5" />
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center gap-2 text-base">
+          <FileText className="h-4 w-4" />
           Detalhamento de Cotações Aprovadas
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        <div className="rounded-md border">
+      <CardContent className="pt-0">
+        <div className="rounded-md border overflow-auto max-h-[500px]">
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead className="whitespace-nowrap">Data da Cotação</TableHead>
-                <TableHead className="whitespace-nowrap">Transportadora</TableHead>
-                <TableHead className="whitespace-nowrap">Origem</TableHead>
-                <TableHead className="whitespace-nowrap">Destino</TableHead>
-                <TableHead className="text-right whitespace-nowrap">VL TN Liberado</TableHead>
-                <TableHead className="text-right whitespace-nowrap">Volume Embarca</TableHead>
-                <TableHead className="whitespace-nowrap">Produto</TableHead>
-                <TableHead className="text-right whitespace-nowrap">Valor Total</TableHead>
+              <TableRow className="bg-muted/50">
+                <TableHead className="whitespace-nowrap text-xs h-9 px-2">Data</TableHead>
+                <TableHead className="whitespace-nowrap text-xs h-9 px-2">Transportadora</TableHead>
+                <TableHead className="whitespace-nowrap text-xs h-9 px-2">Origem</TableHead>
+                <TableHead className="whitespace-nowrap text-xs h-9 px-2">Destino</TableHead>
+                <TableHead className="text-right whitespace-nowrap text-xs h-9 px-2">VL TN Lib.</TableHead>
+                <TableHead className="text-right whitespace-nowrap text-xs h-9 px-2">Vol. Embarc.</TableHead>
+                <TableHead className="whitespace-nowrap text-xs h-9 px-2">Produto</TableHead>
+                <TableHead className="text-right whitespace-nowrap text-xs h-9 px-2">Valor Total</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {linhasTabela.map((linha, index) => (
-                <TableRow key={index}>
-                  <TableCell className="whitespace-nowrap">{linha.data}</TableCell>
-                  <TableCell className="whitespace-nowrap">{linha.transportadora}</TableCell>
-                  <TableCell className="whitespace-nowrap">{linha.origem}</TableCell>
-                  <TableCell className="whitespace-nowrap">{linha.destino}</TableCell>
-                  <TableCell className="text-right whitespace-nowrap">
+                <TableRow key={index} className="hover:bg-muted/30">
+                  <TableCell className="whitespace-nowrap text-xs py-2 px-2">{linha.data}</TableCell>
+                  <TableCell className="whitespace-nowrap text-xs py-2 px-2">{linha.transportadora}</TableCell>
+                  <TableCell className="whitespace-nowrap text-xs py-2 px-2">{linha.origem}</TableCell>
+                  <TableCell className="whitespace-nowrap text-xs py-2 px-2">{linha.destino}</TableCell>
+                  <TableCell className="text-right whitespace-nowrap text-xs py-2 px-2">
                     R$ {linha.valorTnLiberado.toLocaleString("pt-BR", {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}
                   </TableCell>
-                  <TableCell className="text-right whitespace-nowrap">
+                  <TableCell className="text-right whitespace-nowrap text-xs py-2 px-2">
                     {linha.volumeEmbarca.toLocaleString("pt-BR", {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
                     })}
                   </TableCell>
-                  <TableCell className="whitespace-nowrap">{linha.produto}</TableCell>
-                  <TableCell className="text-right whitespace-nowrap">
+                  <TableCell className="whitespace-nowrap text-xs py-2 px-2">{linha.produto}</TableCell>
+                  <TableCell className="text-right whitespace-nowrap text-xs py-2 px-2">
                     R$ {linha.valorTotal.toLocaleString("pt-BR", {
                       minimumFractionDigits: 2,
                       maximumFractionDigits: 2,
@@ -141,18 +141,18 @@ const DetalheCotacoesTable = ({ historico }: DetalheCotacoesTableProps) => {
                   </TableCell>
                 </TableRow>
               ))}
-              <TableRow className="font-bold bg-muted/50">
-                <TableCell colSpan={5} className="text-right">
+              <TableRow className="font-semibold bg-muted border-t-2">
+                <TableCell colSpan={5} className="text-right text-xs py-2 px-2">
                   TOTAL
                 </TableCell>
-                <TableCell className="text-right whitespace-nowrap">
+                <TableCell className="text-right whitespace-nowrap text-xs py-2 px-2">
                   {totais.volumeTotal.toLocaleString("pt-BR", {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,
                   })}
                 </TableCell>
-                <TableCell></TableCell>
-                <TableCell className="text-right whitespace-nowrap">
+                <TableCell className="text-xs py-2 px-2"></TableCell>
+                <TableCell className="text-right whitespace-nowrap text-xs py-2 px-2">
                   R$ {totais.valorTotal.toLocaleString("pt-BR", {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2,
