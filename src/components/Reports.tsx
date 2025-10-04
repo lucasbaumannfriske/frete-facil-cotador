@@ -6,6 +6,7 @@ import { CotacaoSalva } from "@/types";
 import ReportsKpis from "./ReportsKpis";
 import ReportsFiltros from "./ReportsFiltros";
 import DesempenhoTransportadoras from "./DesempenhoTransportadoras";
+import DetalheCotacoesTable from "./DetalheCotacoesTable";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 
 interface ReportsProps {
@@ -142,7 +143,10 @@ const Reports = ({ historico }: ReportsProps) => {
         valorTotalAprovado={valorTotalAprovado}
       />
 
-      {/* Nova ordem: Desempenho das Transportadoras primeiro */}
+      {/* Tabela detalhada de cotações aprovadas */}
+      <DetalheCotacoesTable historico={cotacoesFiltradas} />
+
+      {/* Desempenho das Transportadoras */}
       <DesempenhoTransportadoras historico={cotacoesFiltradas} />
 
       {/* Depois, o gráfico do histórico mensal */}
