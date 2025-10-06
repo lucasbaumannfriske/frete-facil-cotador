@@ -1,5 +1,4 @@
-
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +33,7 @@ import { useSafras } from "@/hooks/useSafras";
 import { useGrupos } from "@/hooks/useGrupos";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
 
 interface HistoricoCotacoesProps {
   cotacoes: CotacaoSalva[];
@@ -48,6 +48,7 @@ const HistoricoCotacoes = ({ cotacoes, loading = false }: HistoricoCotacoesProps
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editData, setEditData] = useState<CotacaoSalva | null>(null);
   const [filtroCliente, setFiltroCliente] = useState<string>("");
+  const [qtdEntregue, setQtdEntregue] = useState<Record<string, number>>({});
   
   // Estado local para armazenar cotações atualizadas
   const [localCotacoes, setLocalCotacoes] = useState<CotacaoSalva[]>(cotacoes);
@@ -56,6 +57,32 @@ const HistoricoCotacoes = ({ cotacoes, loading = false }: HistoricoCotacoesProps
   React.useEffect(() => {
     setLocalCotacoes(cotacoes);
   }, [cotacoes]);
+
+  // Buscar quantidade entregue para cada transportadora quando expandir
+  useEffect(() => {
+    const fetchQtdEntregue = async () => {
+      const cotacoesExpandidas = localCotacoes.filter(c => expandedItems.includes(c.id));
+      
+      for (const cotacao of cotacoesExpandidas) {
+        for (const transp of cotacao.transportadoras) {
+          const { data, error } = await supabase
+            .from("ctes")
+            .select("quantidade")
+            .eq("cotacao_id", cotacao.id)
+            .eq("transportadora_id", transp.id);
+          
+          if (!error && data) {
+            const total = data.reduce((acc, cte) => acc + (cte.quantidade || 0), 0);
+            setQtdEntregue(prev => ({ ...prev, [`${cotacao.id}-${transp.id}`]: total }));
+          }
+        }
+      }
+    };
+    
+    if (expandedItems.length > 0) {
+      fetchQtdEntregue();
+    }
+  }, [expandedItems, localCotacoes]);
 
   // Filtrar cotações por cliente
   const cotacoesFiltradas = localCotacoes.filter(cotacao => 
@@ -506,18 +533,9 @@ const HistoricoCotacoes = ({ cotacoes, loading = false }: HistoricoCotacoesProps
                               
                               <div>
                                 <label className="text-xs text-muted-foreground">Qtd Entregue:</label>
-                                {isEditing ? (
-                                  <Input
-                                    value={transp.quantidadeEntregue || ""}
-                                    onChange={(e) => updateTransportadora(idx, 'quantidadeEntregue', e.target.value)}
-                                    className="mt-1"
-                                    placeholder="Quantidade"
-                                  />
-                                ) : (
-                                  <p className="mt-1 text-sm">
-                                    {transp.quantidadeEntregue || "N/A"}
-                                  </p>
-                                )}
+                                <p className="mt-1 text-sm font-medium text-blue-600">
+                                  {qtdEntregue[`${cotacao.id}-${transp.id}`] || 0}
+                                </p>
                               </div>
                               
                               <div>
@@ -545,14 +563,27 @@ const HistoricoCotacoes = ({ cotacoes, loading = false }: HistoricoCotacoesProps
                             </div>
 
                             {/* CTEs - Mostrar apenas quando status for Aprovado e não estiver editando */}
-                            {!isEditing && transp.status === "Aprovado" && (
-                              <CteManager 
-                                cotacaoId={cotacao.id}
-                                transportadoraId={transp.id}
-                                transportadoraNome={transp.nome}
-                                propostaFinal={transp.propostaFinal || transp.valorTotal}
-                              />
-                            )}
+                            {!isEditing && transp.status === "Aprovado" && (() => {
+                              // Calcular valor total da cotação (soma de todos os valores das transportadoras)
+                              const valorTotalCotacao = currentData.transportadoras.reduce((acc, t) => {
+                                const valor = t.propostaFinal || t.valorTotal || "0";
+                                const valorNum = parseFloat(valor.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+                                return acc + valorNum;
+                              }, 0);
+                              
+                              // Calcular quantidade total dos produtos
+                              const quantidadeTotalCotacao = currentData.produtos.reduce((acc, p) => acc + (p.quantidade || 0), 0);
+                              
+                              return (
+                                <CteManager 
+                                  cotacaoId={cotacao.id}
+                                  transportadoraId={transp.id}
+                                  transportadoraNome={transp.nome}
+                                  valorTotalCotacao={valorTotalCotacao}
+                                  quantidadeTotalCotacao={quantidadeTotalCotacao}
+                                />
+                              );
+                            })()}
                           </div>
                         ))}
                       </div>

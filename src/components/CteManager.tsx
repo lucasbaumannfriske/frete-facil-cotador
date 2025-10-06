@@ -11,14 +11,16 @@ interface CteManagerProps {
   cotacaoId: string;
   transportadoraId: string;
   transportadoraNome: string;
-  propostaFinal?: string;
+  valorTotalCotacao: number;
+  quantidadeTotalCotacao: number;
 }
 
 const CteManager: React.FC<CteManagerProps> = ({ 
   cotacaoId, 
   transportadoraId, 
   transportadoraNome,
-  propostaFinal 
+  valorTotalCotacao,
+  quantidadeTotalCotacao
 }) => {
   const { ctes, loading, criarCte, deletarCte, baixarArquivo } = useCtes(cotacaoId, transportadoraId);
   const [numeroCte, setNumeroCte] = useState("");
@@ -28,10 +30,11 @@ const CteManager: React.FC<CteManagerProps> = ({
   const [dialogOpen, setDialogOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Calcular saldo restante
-  const propostaFinalNum = propostaFinal ? parseFloat(propostaFinal.replace(/[^\d,]/g, '').replace(',', '.')) : 0;
-  const totalCtes = ctes.reduce((acc, cte) => acc + (cte.valor_cte || 0), 0);
-  const saldoRestante = propostaFinalNum - totalCtes;
+  // Calcular saldos restantes
+  const totalValorCtes = ctes.reduce((acc, cte) => acc + (cte.valor_cte || 0), 0);
+  const totalQtdCtes = ctes.reduce((acc, cte) => acc + (cte.quantidade || 0), 0);
+  const saldoValorRestante = valorTotalCotacao - totalValorCtes;
+  const saldoQtdRestante = quantidadeTotalCotacao - totalQtdCtes;
 
   const formatCurrency = (value: string) => {
     const numbers = value.replace(/\D/g, '');
@@ -119,20 +122,36 @@ const CteManager: React.FC<CteManagerProps> = ({
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
-                {propostaFinal && (
-                  <div className="p-3 bg-muted/30 rounded-md border">
+                <div className="p-3 bg-muted/30 rounded-md border space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="font-medium">Valor Total da Cotação:</span>
+                    <span className="font-semibold text-primary">R$ {valorTotalCotacao.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="font-medium">Saldo Valor Restante:</span>
+                    <span className={`font-semibold ${saldoValorRestante >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      R$ {saldoValorRestante.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                  <div className="border-t pt-2">
                     <div className="flex justify-between text-sm">
-                      <span className="font-medium">Proposta Final:</span>
-                      <span className="font-semibold text-primary">R$ {propostaFinalNum.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                      <span className="font-medium">Quantidade Total:</span>
+                      <span className="font-semibold text-primary">{quantidadeTotalCotacao}</span>
                     </div>
                     <div className="flex justify-between text-sm mt-1">
-                      <span className="font-medium">Saldo Restante:</span>
-                      <span className={`font-semibold ${saldoRestante >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        R$ {saldoRestante.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      <span className="font-medium">Saldo Qtd Restante:</span>
+                      <span className={`font-semibold ${saldoQtdRestante >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {saldoQtdRestante}
                       </span>
                     </div>
                   </div>
-                )}
+                  <div className="border-t pt-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="font-medium">Qtd Entregue:</span>
+                      <span className="font-semibold text-blue-600">{totalQtdCtes}</span>
+                    </div>
+                  </div>
+                </div>
                 
                 <div>
                   <label className="text-sm font-medium">Número do CTE *</label>
