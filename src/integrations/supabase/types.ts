@@ -115,9 +115,11 @@ export type Database = {
           created_at: string
           id: string
           numero_cte: string
+          quantidade: number | null
           transportadora_id: string
           updated_at: string
           user_id: string
+          valor_cte: number | null
         }
         Insert: {
           arquivo_nome?: string | null
@@ -126,9 +128,11 @@ export type Database = {
           created_at?: string
           id?: string
           numero_cte: string
+          quantidade?: number | null
           transportadora_id: string
           updated_at?: string
           user_id: string
+          valor_cte?: number | null
         }
         Update: {
           arquivo_nome?: string | null
@@ -137,9 +141,11 @@ export type Database = {
           created_at?: string
           id?: string
           numero_cte?: string
+          quantidade?: number | null
           transportadora_id?: string
           updated_at?: string
           user_id?: string
+          valor_cte?: number | null
         }
         Relationships: []
       }

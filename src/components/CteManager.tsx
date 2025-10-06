@@ -11,18 +11,38 @@ interface CteManagerProps {
   cotacaoId: string;
   transportadoraId: string;
   transportadoraNome: string;
+  propostaFinal?: string;
 }
 
 const CteManager: React.FC<CteManagerProps> = ({ 
   cotacaoId, 
   transportadoraId, 
-  transportadoraNome 
+  transportadoraNome,
+  propostaFinal 
 }) => {
   const { ctes, loading, criarCte, deletarCte, baixarArquivo } = useCtes(cotacaoId, transportadoraId);
   const [numeroCte, setNumeroCte] = useState("");
+  const [quantidade, setQuantidade] = useState("");
+  const [valorCte, setValorCte] = useState("");
   const [arquivo, setArquivo] = useState<File | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Calcular saldo restante
+  const propostaFinalNum = propostaFinal ? parseFloat(propostaFinal.replace(/[^\d,]/g, '').replace(',', '.')) : 0;
+  const totalCtes = ctes.reduce((acc, cte) => acc + (cte.valor_cte || 0), 0);
+  const saldoRestante = propostaFinalNum - totalCtes;
+
+  const formatCurrency = (value: string) => {
+    const numbers = value.replace(/\D/g, '');
+    const amount = parseFloat(numbers) / 100;
+    return amount.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+
+  const handleValorCteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatCurrency(e.target.value);
+    setValorCte(formatted);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,9 +51,14 @@ const CteManager: React.FC<CteManagerProps> = ({
       return;
     }
 
-    const sucesso = await criarCte(numeroCte, arquivo || undefined);
+    const quantidadeNum = quantidade ? parseFloat(quantidade.replace(',', '.')) : undefined;
+    const valorCteNum = valorCte ? parseFloat(valorCte.replace(/\./g, '').replace(',', '.')) : undefined;
+
+    const sucesso = await criarCte(numeroCte, quantidadeNum, valorCteNum, arquivo || undefined);
     if (sucesso) {
       setNumeroCte("");
+      setQuantidade("");
+      setValorCte("");
       setArquivo(null);
       setDialogOpen(false);
       if (fileInputRef.current) {
@@ -94,6 +119,21 @@ const CteManager: React.FC<CteManagerProps> = ({
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
+                {propostaFinal && (
+                  <div className="p-3 bg-muted/30 rounded-md border">
+                    <div className="flex justify-between text-sm">
+                      <span className="font-medium">Proposta Final:</span>
+                      <span className="font-semibold text-primary">R$ {propostaFinalNum.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                    <div className="flex justify-between text-sm mt-1">
+                      <span className="font-medium">Saldo Restante:</span>
+                      <span className={`font-semibold ${saldoRestante >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        R$ {saldoRestante.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </span>
+                    </div>
+                  </div>
+                )}
+                
                 <div>
                   <label className="text-sm font-medium">Número do CTE *</label>
                   <Input
@@ -103,6 +143,33 @@ const CteManager: React.FC<CteManagerProps> = ({
                     className="mt-1"
                     required
                   />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-sm font-medium">Quantidade</label>
+                    <Input
+                      value={quantidade}
+                      onChange={(e) => setQuantidade(e.target.value)}
+                      placeholder="Ex: 100"
+                      type="number"
+                      step="0.01"
+                      className="mt-1"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="text-sm font-medium">Valor CTE</label>
+                    <div className="relative mt-1">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">R$</span>
+                      <Input
+                        value={valorCte}
+                        onChange={handleValorCteChange}
+                        placeholder="0,00"
+                        className="pl-9"
+                      />
+                    </div>
+                  </div>
                 </div>
                 
                 <div>
@@ -133,6 +200,8 @@ const CteManager: React.FC<CteManagerProps> = ({
                     onClick={() => {
                       setDialogOpen(false);
                       setNumeroCte("");
+                      setQuantidade("");
+                      setValorCte("");
                       setArquivo(null);
                       if (fileInputRef.current) {
                         fileInputRef.current.value = "";
@@ -157,12 +226,20 @@ const CteManager: React.FC<CteManagerProps> = ({
           <div className="space-y-2">
             {ctes.map((cte) => (
               <div key={cte.id} className="flex items-center justify-between p-2 bg-muted/20 rounded border">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-1">
                   <FileText className="h-4 w-4 text-blue-600" />
-                  <div>
+                  <div className="flex-1">
                     <p className="font-medium text-sm">CTE: {cte.numero_cte}</p>
+                    <div className="flex gap-3 text-xs text-muted-foreground mt-1">
+                      {cte.quantidade && (
+                        <span>Qtd: {cte.quantidade}</span>
+                      )}
+                      {cte.valor_cte && (
+                        <span className="font-medium text-green-700">R$ {cte.valor_cte.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                      )}
+                    </div>
                     {cte.arquivo_nome && (
-                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                      <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
                         <Paperclip className="h-3 w-3" />
                         {cte.arquivo_nome}
                       </p>

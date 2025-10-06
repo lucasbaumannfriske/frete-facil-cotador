@@ -10,6 +10,8 @@ export interface CTE {
   numero_cte: string;
   arquivo_url?: string;
   arquivo_nome?: string;
+  quantidade?: number;
+  valor_cte?: number;
   created_at: string;
   updated_at: string;
 }
@@ -42,7 +44,7 @@ export const useCtes = (cotacaoId?: string, transportadoraId?: string) => {
     }
   };
 
-  const criarCte = async (numeroCte: string, arquivo?: File) => {
+  const criarCte = async (numeroCte: string, quantidade?: number, valorCte?: number, arquivo?: File) => {
     try {
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error("Usuário não autenticado");
@@ -73,6 +75,8 @@ export const useCtes = (cotacaoId?: string, transportadoraId?: string) => {
           transportadora_id: transportadoraId,
           user_id: userData.user.id,
           numero_cte: numeroCte,
+          quantidade: quantidade,
+          valor_cte: valorCte,
           arquivo_url: arquivoUrl,
           arquivo_nome: arquivoNome,
         });

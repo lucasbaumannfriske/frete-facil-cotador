@@ -550,6 +550,7 @@ const HistoricoCotacoes = ({ cotacoes, loading = false }: HistoricoCotacoesProps
                                 cotacaoId={cotacao.id}
                                 transportadoraId={transp.id}
                                 transportadoraNome={transp.nome}
+                                propostaFinal={transp.propostaFinal || transp.valorTotal}
                               />
                             )}
                           </div>
